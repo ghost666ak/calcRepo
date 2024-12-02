@@ -1,0 +1,32 @@
+body{
+  margin: 0;
+  background-color: #000;
+  color: #fff;
+}
+
+.banner{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  position: relative;
+}
+
+.banner .content .title{
+  
+}
+
+.banner::before{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url(raw/bg.jpg);
+  background-size: conver;
+  background-position: center;
+  z-index: -1;
+  
+  mask-image: url(raw/inc.gif);
+  mask-size: 200vh,200vh;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
