@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ModeTabs } from '../components/ModeTabs';
 import { SettingsDrawer } from '../components/SettingsDrawer';
 import { HistoryPanel } from '../components/HistoryPanel';
@@ -10,6 +10,7 @@ import { usePreferences } from '../state/preferences';
 import { useHistory } from '../state/history';
 import type { BasicHistoryEntry } from '../features/basic/useBasicCalculator';
 import { lazy, Suspense } from 'react';
+import { useUrlParams } from './useUrlParams';
 
 const ProgrammerView = lazy(() =>
   import('../features/programmer/ProgrammerView').then((m) => ({ default: m.ProgrammerView })),
@@ -19,11 +20,37 @@ const ToolsView = lazy(() =>
 );
 
 export function AppShell(): JSX.Element {
-  const [mode, setMode] = useState<CalculatorMode>('basic');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const { initial, write } = useUrlParams();
+  const [mode, setMode] = useState<CalculatorMode>(initial.mode ?? 'basic');
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(initial.settings ?? false);
+  const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history ?? false);
   const { preferences } = usePreferences();
   const { record } = useHistory();
+
+  // Keep the URL in sync with local UI state (mode + drawers).
+  useEffect(() => {
+    write({
+      mode,
+      settings: settingsOpen ? true : undefined,
+      history: historyOpen ? true : undefined,
+    });
+  }, [mode, settingsOpen, historyOpen, write]);
+
+  // React to back/forward navigation.
+  useEffect(() => {
+    const onUrl = (event: Event) => {
+      const detail = (event as CustomEvent).detail as {
+        mode?: CalculatorMode;
+        settings?: boolean;
+        history?: boolean;
+      };
+      if (detail.mode) setMode(detail.mode);
+      if (typeof detail.settings === 'boolean') setSettingsOpen(detail.settings);
+      if (typeof detail.history === 'boolean') setHistoryOpen(detail.history);
+    };
+    window.addEventListener('calcrepo:url', onUrl);
+    return () => window.removeEventListener('calcrepo:url', onUrl);
+  }, []);
 
   const handleBasicHistory = useCallback(
     (entry: BasicHistoryEntry) => {

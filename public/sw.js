@@ -1,8 +1,10 @@
 /// <reference lib="webworker" />
 
 // calcRepo service worker.
-// Strategy: cache-first for same-origin static assets, network-first for navigations,
-// fall back to the cached index.html for offline app-shell boot.
+// Strategy depends on the user's chosen cache level (default: "assets").
+//   - "shell"    — only install-time app shell. No runtime caching.
+//   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
+//   - "extended" — assets + cache the most recent navigation response for offline boot.
 
 const VERSION = 'calcrepo-v1';
 const STATIC_CACHE = `${VERSION}-static`;
@@ -18,6 +20,8 @@ const APP_SHELL = [
   './pwa/icon-512.png',
   './pwa/icon-maskable-512.png',
 ];
+
+let cacheLevel = 'assets';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,14 +47,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-function isAppShellRequest(url) {
+function isAppShellAsset(url) {
   return (
     url.origin === self.location.origin &&
-    (url.pathname === '/' ||
-      url.pathname.endsWith('/index.html') ||
+    (url.pathname.startsWith('/public/') ||
+      url.pathname.startsWith('/assets/') ||
       url.pathname.endsWith('/manifest.webmanifest') ||
-      url.pathname.startsWith('/public/') ||
-      url.pathname.startsWith('/assets/'))
+      url.pathname.endsWith('/favicon.svg') ||
+      url.pathname.endsWith('/icon.svg') ||
+      url.pathname.endsWith('/icon-maskable.svg'))
   );
 }
 
@@ -60,20 +65,33 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // "shell" level: do not intercept anything except the install-time shell
+  // (which is served from cache anyway via APP_SHELL precache).
+  if (cacheLevel === 'shell') return;
+
   if (request.mode === 'navigate') {
+    if (cacheLevel === 'extended') {
+      // Cache the latest navigation response so offline boots have something fresh.
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
+            return response;
+          })
+          .catch(() => caches.match('./index.html').then((cached) => cached || caches.match('./'))),
+      );
+      return;
+    }
+    // "assets" level: network-first navigations, fall back to cached shell.
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
-          return response;
-        })
         .catch(() => caches.match('./index.html').then((cached) => cached || caches.match('./'))),
     );
     return;
   }
 
-  if (!isAppShellRequest(url)) return;
+  if (!isAppShellAsset(url)) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
@@ -85,11 +103,16 @@ self.addEventListener('fetch', (event) => {
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
           return response;
         })
-        .catch(() => caches.match('./index.html'));
+        .catch(() => caches.match('./index.html')),
     }),
   );
 });
 
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data && typeof event.data === 'object' && event.data.type === 'SET_CACHE_LEVEL') {
+    if (event.data.level === 'shell' || event.data.level === 'assets' || event.data.level === 'extended') {
+      cacheLevel = event.data.level;
+    }
+  }
 });

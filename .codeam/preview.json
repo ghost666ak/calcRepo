@@ -1,0 +1,15 @@
+{
+  "framework": "Vite",
+  "command": "npm",
+  "args": [
+    "run",
+    "dev"
+  ],
+  "port": 5173,
+  "ready_pattern": "Local:\\s+http://",
+  "env": {
+    "HOST": "0.0.0.0"
+  },
+  "setup_commands": [],
+  "notes": null
+}

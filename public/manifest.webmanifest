@@ -44,18 +44,83 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "./pwa/screenshot-basic.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Basic calculator"
+    },
+    {
+      "src": "./pwa/screenshot-scientific.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Scientific calculator"
+    },
+    {
+      "src": "./pwa/screenshot-basic-narrow.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Basic calculator on mobile"
+    }
+  ],
   "shortcuts": [
+    {
+      "name": "Basic",
+      "short_name": "Basic",
+      "url": "/calcRepo/?mode=basic",
+      "description": "Open the basic calculator",
+      "icons": [
+        { "src": "./pwa/shortcut-basic.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
+    },
     {
       "name": "Scientific",
       "short_name": "Sci",
       "url": "/calcRepo/?mode=scientific",
-      "description": "Open the scientific calculator"
+      "description": "Open the scientific calculator",
+      "icons": [
+        { "src": "./pwa/shortcut-scientific.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
     },
     {
       "name": "Base",
       "short_name": "Base",
       "url": "/calcRepo/?mode=base",
-      "description": "Open the base converter"
+      "description": "Open the base converter",
+      "icons": [
+        { "src": "./pwa/shortcut-base.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
+    },
+    {
+      "name": "Programmer",
+      "short_name": "Code",
+      "url": "/calcRepo/?mode=programmer",
+      "description": "Open the programmer calculator",
+      "icons": [
+        { "src": "./pwa/shortcut-programmer.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
+    },
+    {
+      "name": "Tools",
+      "short_name": "Tools",
+      "url": "/calcRepo/?mode=tools",
+      "description": "Open the coding toolbox",
+      "icons": [
+        { "src": "./pwa/shortcut-tools.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "url": "/calcRepo/?settings=open",
+      "description": "Open the settings panel",
+      "icons": [
+        { "src": "./pwa/shortcut-settings.svg", "sizes": "96x96", "type": "image/svg+xml", "purpose": "any" }
+      ]
     }
   ]
 }

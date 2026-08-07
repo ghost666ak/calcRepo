@@ -324,6 +324,7 @@
   background-color: rgba(15, 23, 42, 0.5);
   display: flex;
   justify-content: flex-end;
+  z-index: 1000;
 }
 
 .settings-drawer > * {
@@ -333,6 +334,47 @@
   display: grid;
   gap: var(--space-3);
   border-left: 1px solid var(--color-border);
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.settings-drawer__section {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-drawer__section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-drawer__section h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.settings-drawer__success {
+  margin: 0;
+  color: var(--color-success, #10b981);
+  font-size: 0.85rem;
+}
+
+.settings-drawer__update {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.settings-drawer__update p {
+  margin: 0;
 }
 
 .error-boundary {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AngleUnit, Preferences } from '../core/types';
+import type { AngleUnit, CacheLevel, Language, Preferences, Theme } from '../core/types';
 
 const STORAGE_KEY = 'calcRepo.preferences.v1';
 
@@ -8,6 +8,9 @@ const DEFAULT_PREFERENCES: Preferences = {
   reducedMotion: false,
   angleUnit: 'RAD',
   precisionDigits: 12,
+  language: 'en',
+  pwaAutoUpdate: true,
+  cacheLevel: 'assets',
 };
 
 function isAngleUnit(value: unknown): value is AngleUnit {
@@ -16,6 +19,18 @@ function isAngleUnit(value: unknown): value is AngleUnit {
 
 function isPrecision(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 64;
+}
+
+function isTheme(value: unknown): value is Theme {
+  return value === 'light' || value === 'dark' || value === 'system';
+}
+
+function isLanguage(value: unknown): value is Language {
+  return value === 'en';
+}
+
+function isCacheLevel(value: unknown): value is CacheLevel {
+  return value === 'shell' || value === 'assets' || value === 'extended';
 }
 
 function readFromStorage(): Preferences {
@@ -27,10 +42,13 @@ function readFromStorage(): Preferences {
     if (!raw) return DEFAULT_PREFERENCES;
     const parsed = JSON.parse(raw) as Partial<Preferences>;
     return {
-      theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : 'system',
+      theme: isTheme(parsed.theme) ? parsed.theme : 'system',
       reducedMotion: Boolean(parsed.reducedMotion),
       angleUnit: isAngleUnit(parsed.angleUnit) ? parsed.angleUnit : 'RAD',
       precisionDigits: isPrecision(parsed.precisionDigits) ? parsed.precisionDigits : 12,
+      language: isLanguage(parsed.language) ? parsed.language : 'en',
+      pwaAutoUpdate: parsed.pwaAutoUpdate === undefined ? true : Boolean(parsed.pwaAutoUpdate),
+      cacheLevel: isCacheLevel(parsed.cacheLevel) ? parsed.cacheLevel : 'assets',
     };
   } catch {
     return DEFAULT_PREFERENCES;
