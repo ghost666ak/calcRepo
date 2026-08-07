@@ -2,6 +2,7 @@ import type { ParseError } from './parse-error';
 import type { Token } from './token';
 
 const NUMBER_PATTERN = /^\d+(?:\.\d+)?|\.\d+/;
+const IDENT_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]*/;
 
 export function tokenize(input: string): readonly Token[] | { error: ParseError } {
   const tokens: Token[] = [];
@@ -9,6 +10,11 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
   while (i < input.length) {
     const ch = input[i]!;
     if (ch === ' ' || ch === '\t') {
+      i += 1;
+      continue;
+    }
+    if (ch === ',') {
+      tokens.push({ kind: 'comma', value: ',', position: i });
       i += 1;
       continue;
     }
@@ -24,6 +30,21 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
         };
       }
       tokens.push({ kind: 'number', value: match[0], position: i });
+      i += match[0].length;
+      continue;
+    }
+    if (/[a-zA-Z_]/.test(ch)) {
+      const match = input.slice(i).match(IDENT_PATTERN);
+      if (!match) {
+        return {
+          error: {
+            message: `Unexpected character "${ch}"`,
+            position: i,
+            hint: 'Identifiers must start with a letter.',
+          },
+        };
+      }
+      tokens.push({ kind: 'ident', value: match[0], position: i });
       i += match[0].length;
       continue;
     }
@@ -58,7 +79,7 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
           error: {
             message: `Unexpected character "${ch}"`,
             position: i,
-            hint: 'Allowed: digits, decimal point, + - * / ^ % ( )',
+            hint: 'Allowed: digits, decimal point, identifiers, + - * / ^ % ( ) ,',
           },
         };
     }

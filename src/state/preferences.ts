@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react';
-import type { Preferences } from '../core/types';
+import type { AngleUnit, Preferences } from '../core/types';
 
 const STORAGE_KEY = 'calcRepo.preferences.v1';
 
-const DEFAULT_PREFERENCES: Preferences = { theme: 'system', reducedMotion: false };
+const DEFAULT_PREFERENCES: Preferences = {
+  theme: 'system',
+  reducedMotion: false,
+  angleUnit: 'RAD',
+  precisionDigits: 12,
+};
+
+function isAngleUnit(value: unknown): value is AngleUnit {
+  return value === 'DEG' || value === 'RAD' || value === 'GRAD';
+}
+
+function isPrecision(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 64;
+}
 
 function readFromStorage(): Preferences {
   if (typeof window === 'undefined') {
@@ -16,6 +29,8 @@ function readFromStorage(): Preferences {
     return {
       theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : 'system',
       reducedMotion: Boolean(parsed.reducedMotion),
+      angleUnit: isAngleUnit(parsed.angleUnit) ? parsed.angleUnit : 'RAD',
+      precisionDigits: isPrecision(parsed.precisionDigits) ? parsed.precisionDigits : 12,
     };
   } catch {
     return DEFAULT_PREFERENCES;

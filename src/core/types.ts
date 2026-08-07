@@ -7,7 +7,11 @@ export type EvalResult<T> =
       readonly hint?: string;
     };
 
+export type AngleUnit = 'DEG' | 'RAD' | 'GRAD';
+
 export interface Preferences {
   readonly theme: 'light' | 'dark' | 'system';
   readonly reducedMotion: boolean;
+  readonly angleUnit: AngleUnit;
+  readonly precisionDigits: number;
 }

@@ -100,6 +100,52 @@
   justify-content: flex-end;
 }
 
+.scientific-view__settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.scientific-view__settings fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.scientific-view__settings input[type='range'] {
+  width: 100%;
+}
+
+.scientific-view__memory {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.keypad--scientific {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.key--function {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.display__memory {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  align-self: flex-end;
+}
+
 .basic-view__actions button {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);

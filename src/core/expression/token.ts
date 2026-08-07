@@ -1,6 +1,7 @@
 export interface Token {
   readonly kind:
     | 'number'
+    | 'ident'
     | 'plus'
     | 'minus'
     | 'star'
@@ -9,6 +10,7 @@ export interface Token {
     | 'percent'
     | 'lparen'
     | 'rparen'
+    | 'comma'
     | 'eof';
   readonly value: string;
   readonly position: number;
