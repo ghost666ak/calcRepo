@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Key } from '../../components/Key';
+import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
 
@@ -31,7 +32,7 @@ const KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'op
 ];
 
 export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
-  const { expression, display, error, history, press, copy, repeat, consumeLatestEntry } = useBasicCalculator();
+  const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry } = useBasicCalculator();
 
   useEffect(() => {
     if (!onHistoryChange) return;
@@ -42,9 +43,11 @@ export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
   return (
     <section className="basic-view" aria-label="Basic calculator">
       <div className="display" data-testid="display">
-        <span className="display__expression" data-testid="display-expression">
-          {expression || ' '}
-        </span>
+        <ExpressionDisplay
+          expression={expression}
+          errorPosition={errorPosition}
+          testId="display-expression"
+        />
         <output
           className="display__value"
           data-testid="display-value"

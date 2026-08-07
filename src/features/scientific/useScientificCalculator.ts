@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { evaluateScientific } from '../../core/scientific/evaluate';
+import { autoCorrectParens } from '../../core/expression/autoCorrect';
 import type { AngleUnit } from '../../core/types';
 import { usePreferences } from '../../state/preferences';
 
@@ -12,6 +13,7 @@ export interface UseScientificCalculatorResult {
   readonly expression: string;
   readonly display: string;
   readonly error: string | null;
+  readonly errorPosition: number | null;
   readonly history: readonly ScientificHistoryEntry[];
   readonly angleUnit: AngleUnit;
   readonly precisionDigits: number;
@@ -35,6 +37,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   const [expression, setExpression] = useState('');
   const [display, setDisplay] = useState('0');
   const [error, setError] = useState<string | null>(null);
+  const [errorPosition, setErrorPosition] = useState<number | null>(null);
   const [history, setHistory] = useState<readonly ScientificHistoryEntry[]>([]);
   const [memory, setMemory] = useState(0);
 
@@ -42,10 +45,12 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setExpression('');
     setDisplay('0');
     setError(null);
+    setErrorPosition(null);
   }, []);
 
   const backspace = useCallback(() => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = current.slice(0, -1);
       setDisplay(next.length === 0 ? '0' : next);
@@ -55,6 +60,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
 
   const appendText = useCallback((value: string) => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = current + value;
       setDisplay(next);
@@ -65,18 +71,32 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   const equals = useCallback(() => {
     setExpression((current) => {
       const trimmed = current;
-      const result = evaluateScientific(trimmed, {
+      const options = {
         maxLength: 4096,
         maxDepth: 256,
         angleUnit: preferences.angleUnit,
         precisionDigits: preferences.precisionDigits,
-      });
+      };
+      const result = evaluateScientific(trimmed, options);
       if (result.ok) {
         setDisplay(result.formatted);
         setHistory((prev) => [{ expression: trimmed, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
         return result.formatted;
       }
+      const corrected = autoCorrectParens<number>(trimmed, result, {
+        evaluate: (input) => evaluateScientific(input, options),
+      });
+      if (corrected) {
+        setDisplay(corrected.formatted);
+        setHistory((prev) =>
+          [{ expression: corrected.correctedFrom, result: corrected.formatted }, ...prev].slice(0, MAX_HISTORY),
+        );
+        setError(`${result.message} (auto-fixed: ${corrected.note})`);
+        setErrorPosition(result.position ?? null);
+        return corrected.formatted;
+      }
       setError(result.message);
+      setErrorPosition(result.position ?? null);
       setDisplay('Error');
       return trimmed;
     });
@@ -161,6 +181,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       expression,
       display,
       error,
+      errorPosition,
       history,
       angleUnit: preferences.angleUnit,
       precisionDigits: preferences.precisionDigits,
@@ -180,6 +201,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       expression,
       display,
       error,
+      errorPosition,
       history,
       preferences.angleUnit,
       preferences.precisionDigits,

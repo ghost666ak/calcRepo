@@ -182,6 +182,21 @@
   font-size: 0.85rem;
 }
 
+.display__expression-error {
+  display: inline-block;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+  border-bottom: 2px solid var(--color-danger);
+  border-radius: 2px;
+  padding: 0 1px;
+  animation: display-error-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes display-error-pulse {
+  0%, 100% { background: color-mix(in srgb, var(--color-danger) 18%, transparent); }
+  50% { background: color-mix(in srgb, var(--color-danger) 32%, transparent); }
+}
+
 .basic-view__actions {
   display: flex;
   gap: var(--space-2);

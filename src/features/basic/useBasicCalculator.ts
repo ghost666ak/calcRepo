@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { evaluate } from '../../core/expression';
+import { autoCorrectParens } from '../../core/expression/autoCorrect';
 
 export interface BasicHistoryEntry {
   readonly expression: string;
@@ -10,6 +11,7 @@ export interface UseBasicCalculatorResult {
   readonly expression: string;
   readonly display: string;
   readonly error: string | null;
+  readonly errorPosition: number | null;
   readonly history: readonly BasicHistoryEntry[];
   readonly press: (value: string) => void;
   readonly clear: () => void;
@@ -28,6 +30,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const [expression, setExpression] = useState('');
   const [display, setDisplay] = useState('0');
   const [error, setError] = useState<string | null>(null);
+  const [errorPosition, setErrorPosition] = useState<number | null>(null);
   const [history, setHistory] = useState<readonly BasicHistoryEntry[]>([]);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastExpression, setLastExpression] = useState<string | null>(null);
@@ -37,10 +40,12 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     setExpression('');
     setDisplay('0');
     setError(null);
+    setErrorPosition(null);
   }, []);
 
   const backspace = useCallback(() => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = current.slice(0, -1);
       setDisplay(next.length === 0 ? '0' : next);
@@ -50,6 +55,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
 
   const pressDigit = useCallback((digit: string) => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = appendDigit(current, digit);
       setDisplay(next.length === 0 ? digit : next);
@@ -59,6 +65,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
 
   const pressOperator = useCallback((op: string) => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = appendOperator(current, op);
       setDisplay(next);
@@ -68,6 +75,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
 
   const pressDecimal = useCallback(() => {
     setError(null);
+    setErrorPosition(null);
     setExpression((current) => {
       const next = appendDecimal(current);
       setDisplay(next === '0' ? '0.' : next);
@@ -89,7 +97,26 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         setLatestEntry({ expression: current, result: result.formatted });
         return result.formatted;
       }
+      // Attempt a safe auto-correction (e.g. "(2+3" → "(2+3)").
+      const corrected = autoCorrectParens(current, result);
+      if (corrected) {
+        setDisplay(corrected.formatted);
+        setLastExpression(corrected.correctedFrom);
+        setLastResult(corrected.formatted);
+        setHistory((prev) => {
+          const entry: BasicHistoryEntry = {
+            expression: corrected.correctedFrom,
+            result: corrected.formatted,
+          };
+          return [entry, ...prev].slice(0, MAX_HISTORY);
+        });
+        setLatestEntry({ expression: corrected.correctedFrom, result: corrected.formatted });
+        setError(`${result.message} (auto-fixed: ${corrected.note})`);
+        setErrorPosition(result.position ?? null);
+        return corrected.formatted;
+      }
       setError(result.message);
+      setErrorPosition(result.position ?? null);
       setDisplay('Error');
       return current;
     });
@@ -176,8 +203,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   }, [press, equals, backspace, clear]);
 
   return useMemo(
-    () => ({ expression, display, error, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry }),
-    [expression, display, error, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry],
+    () => ({ expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry }),
+    [expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry],
   );
 }
 

@@ -5,6 +5,12 @@ export type EvalResult<T> =
       readonly kind: 'syntax' | 'domain' | 'precision' | 'internal';
       readonly message: string;
       readonly hint?: string;
+      /**
+       * Character offset in the original input that caused the error.
+       * `undefined` when the error applies to the expression as a whole
+       * (e.g. "expression ends with an operator").
+       */
+      readonly position?: number;
     };
 
 export type AngleUnit = 'DEG' | 'RAD' | 'GRAD';

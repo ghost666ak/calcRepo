@@ -1,6 +1,7 @@
 import { listScientificFunctions } from '../../core/scientific/functions';
 import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
+import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useScientificCalculator } from './useScientificCalculator';
 
 interface ButtonProps {
@@ -29,6 +30,7 @@ export function ScientificView(): JSX.Element {
     expression,
     display,
     error,
+    errorPosition,
     history,
     angleUnit,
     precisionDigits,
@@ -76,9 +78,11 @@ export function ScientificView(): JSX.Element {
         </label>
       </div>
       <div className="display" data-testid="display">
-        <span className="display__expression" data-testid="display-expression">
-          {expression || ' '}
-        </span>
+        <ExpressionDisplay
+          expression={expression}
+          errorPosition={errorPosition}
+          testId="display-expression"
+        />
         <output className="display__value" data-testid="display-value" aria-live="polite">
           {display}
         </output>

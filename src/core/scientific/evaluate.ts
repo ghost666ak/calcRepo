@@ -50,7 +50,7 @@ export function evaluateScientific(
   }
   const tokenized = tokenize(input);
   if ('error' in tokenized) {
-    return syntax(tokenized.error.message, tokenized.error.hint);
+    return syntax(tokenized.error.message, tokenized.error.hint, tokenized.error.position);
   }
   const state: ParseState = { tokens: tokenized as Token[], index: 0 };
   if (peek(state).kind === 'eof') {
@@ -61,20 +61,25 @@ export function evaluateScientific(
   if (peek(state).kind !== 'eof') {
     const leftover = peek(state);
     if (leftover.kind === 'rparen') {
-      return syntax('Unmatched closing parenthesis.', 'Remove the extra ")".');
+      return syntax('Unmatched closing parenthesis.', 'Remove the extra ")".', leftover.position);
     }
     if (leftover.kind === 'plus' || leftover.kind === 'minus') {
-      return syntax('Expression ends with an operator.', 'Finish the value before pressing =.');
+      return syntax('Expression ends with an operator.', 'Finish the value before pressing =.', leftover.position);
     }
     if (leftover.kind === 'star' || leftover.kind === 'slash' || leftover.kind === 'caret') {
-      return syntax(`Expression ends with "${leftover.value}".`, 'Add the right-hand operand before pressing =.');
+      return syntax(
+        `Expression ends with "${leftover.value}".`,
+        'Add the right-hand operand before pressing =.',
+        leftover.position,
+      );
     }
     if (leftover.kind === 'percent') {
-      return syntax('Percent sign with nothing after it.', 'Add a number before "%" or remove the stray "%".');
+      return syntax('Percent sign with nothing after it.', 'Add a number before "%" or remove the stray "%".', leftover.position);
     }
     return syntax(
       `Unexpected token "${leftover.value || leftover.kind}" after expression.`,
       'Tap × between two values, or finish the expression before pressing =.',
+      leftover.position,
     );
   }
   return result;
@@ -176,11 +181,12 @@ function parseBinaryExpression(
     consume(state);
     if (peek(state).kind === 'eof') {
       if (op === 'plus' || op === 'minus') {
-        return syntax('Expression ends with an operator.', 'Finish the value before pressing =.');
+        return syntax('Expression ends with an operator.', 'Finish the value before pressing =.', opToken.position);
       }
       return syntax(
         `Expression ends with "${opToken.value}".`,
         'Add the right-hand operand before pressing =.',
+        opToken.position,
       );
     }
     const right = parseBinaryExpression(state, options, depth + 1, opPrecedence + 1);
@@ -228,7 +234,7 @@ function parsePrimary(
     consume(state);
     const value = Number(token.value);
     if (!Number.isFinite(value)) {
-      return syntax(`Invalid number "${token.value}".`, 'Use digits with at most one decimal point.');
+      return syntax(`Invalid number "${token.value}".`, 'Use digits with at most one decimal point.', token.position);
     }
     return ok(value, formatScientific(value, options.precisionDigits));
   }
@@ -241,26 +247,27 @@ function parsePrimary(
     if (!inner.ok) return inner;
     const closer = peek(state);
     if (closer.kind !== 'rparen') {
-      return syntax('Missing closing parenthesis.', 'Add the matching ")".');
+      return syntax('Missing closing parenthesis.', 'Add the matching ")".', closer.position);
     }
     consume(state);
     return inner;
   }
   if (token.kind === 'rparen') {
-    return syntax('Unexpected ")".', 'Match every ")" with an opening "(".');
+    return syntax('Unexpected ")".', 'Match every ")" with an opening "(".', token.position);
   }
   if (token.kind === 'percent') {
-    return syntax('Stray "%".', 'Put a number or ")" before the percent sign.');
+    return syntax('Stray "%".', 'Put a number or ")" before the percent sign.', token.position);
   }
   if (token.kind === 'comma') {
-    return syntax('Unexpected ",".', 'Commas separate arguments inside supported functions.');
+    return syntax('Unexpected ",".', 'Commas separate arguments inside supported functions.', token.position);
   }
   if (token.kind === 'eof') {
-    return syntax('Expression is incomplete.', 'Add a number or ")" before pressing =.');
+    return syntax('Expression is incomplete.', 'Add a number or ")" before pressing =.', token.position);
   }
   return syntax(
     `Expected a number or "(", but got "${token.value || token.kind}".`,
     'Use a digit, a decimal, or "(" to continue the expression.',
+    token.position,
   );
 }
 
@@ -271,7 +278,7 @@ function parseIdentifier(
 ): EvalResult<ScientificValue> {
   const token = peek(state);
   if (token.kind !== 'ident') {
-    return syntax(`Unexpected token "${token.value}".`, 'Use digits, operators, parentheses, or function names.');
+    return syntax(`Unexpected token "${token.value}".`, 'Use digits, operators, parentheses, or function names.', token.position);
   }
   const name = token.value;
   if (Object.prototype.hasOwnProperty.call(SCIENTIFIC_CONSTANTS, name)) {
@@ -281,11 +288,11 @@ function parseIdentifier(
   }
   const func = SCIENTIFIC_FUNCTIONS[name];
   if (!func) {
-    return syntax(`Unknown function "${name}".`, 'Use one of the supported scientific functions.');
+    return syntax(`Unknown function "${name}".`, 'Use one of the supported scientific functions.', token.position);
   }
   consume(state);
   if (peek(state).kind !== 'lparen') {
-    return syntax(`Function "${name}" requires "(...)".`, 'Wrap the argument(s) in parentheses.');
+    return syntax(`Function "${name}" requires "(...)".`, 'Wrap the argument(s) in parentheses.', peek(state).position);
   }
   consume(state);
   const args: ScientificValue[] = [];
@@ -302,13 +309,14 @@ function parseIdentifier(
   }
   const closer = peek(state);
   if (closer.kind !== 'rparen') {
-    return syntax(`Function "${name}" missing closing parenthesis.`, 'Close the function call with ")".');
+    return syntax(`Function "${name}" missing closing parenthesis.`, 'Close the function call with ")".', closer.position);
   }
   consume(state);
   if (args.length !== func.args) {
     return syntax(
       `Function "${name}" expects ${func.args} argument(s), got ${args.length}.`,
       `Provide exactly ${func.args} argument(s).`,
+      closer.position,
     );
   }
   return func.evaluate(args, options.angleUnit, options.precisionDigits);

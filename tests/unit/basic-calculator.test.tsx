@@ -57,4 +57,30 @@ describe('BasicView interactions', () => {
     });
     expect(screen.getByTestId('display-value')).toHaveTextContent('10');
   });
+
+  it('auto-corrects a missing ")" and reports what it did', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.keyboard('(2+3');
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    const error = screen.getByTestId('display-error');
+    expect(error.textContent ?? '').toMatch(/auto-fixed/i);
+    expect(error.textContent ?? '').toMatch(/missing "\)"/i);
+  });
+
+  it('highlights the offending character when the parser rejects input', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '1' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByTestId('key-equals'));
+    const expression = screen.getByTestId('display-expression');
+    const errorSpan = expression.querySelector('[data-error="true"]');
+    expect(errorSpan).not.toBeNull();
+    // The trailing "+" should be highlighted.
+    expect(errorSpan?.textContent).toBe('+');
+  });
 });
