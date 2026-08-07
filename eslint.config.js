@@ -40,4 +40,10 @@ export default [
       globals: { ...globals.browser, ...globals.node, ...globals.jest },
     },
   },
+  {
+    files: ['public/**/*.{js,ts}'],
+    languageOptions: {
+      globals: { ...globals.serviceworker },
+    },
+  },
 ];

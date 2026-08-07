@@ -3,6 +3,7 @@ import { ModeTabs } from '../components/ModeTabs';
 import { SettingsDrawer } from '../components/SettingsDrawer';
 import { BasicView } from '../features/basic/BasicView';
 import { ScientificView } from '../features/scientific/ScientificView';
+import { BaseView } from '../features/base/BaseView';
 import { AVAILABLE_MODES, type CalculatorMode } from '../core/modes';
 import { usePreferences } from '../state/preferences';
 
@@ -29,7 +30,8 @@ export function AppShell(): JSX.Element {
       <main className="app-shell__main" aria-live="polite">
         {mode === 'basic' && <BasicView />}
         {mode === 'scientific' && <ScientificView />}
-        {mode !== 'basic' && mode !== 'scientific' && (
+        {mode === 'base' && <BaseView />}
+        {mode !== 'basic' && mode !== 'scientific' && mode !== 'base' && (
           <section className="placeholder" role="status" aria-live="polite">
             <h2>{modeLabel(mode)}</h2>
             <p>This mode will be implemented in a later phase. See docs/roadmap.</p>
