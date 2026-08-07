@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Display } from '../components/Display';
-import { Keypad } from '../components/Keypad';
 import { ModeTabs } from '../components/ModeTabs';
 import { SettingsDrawer } from '../components/SettingsDrawer';
+import { BasicView } from '../features/basic/BasicView';
 import { AVAILABLE_MODES, type CalculatorMode } from '../core/modes';
 import { usePreferences } from '../state/preferences';
 
@@ -27,10 +26,19 @@ export function AppShell(): JSX.Element {
       </header>
       <ModeTabs modes={AVAILABLE_MODES} value={mode} onChange={setMode} />
       <main className="app-shell__main" aria-live="polite">
-        <Display value="0" mode={mode} />
-        <Keypad mode={mode} />
+        {mode === 'basic' && <BasicView />}
+        {mode !== 'basic' && (
+          <section className="placeholder" role="status" aria-live="polite">
+            <h2>{modeLabel(mode)}</h2>
+            <p>This mode will be implemented in a later phase. See docs/roadmap.</p>
+          </section>
+        )}
       </main>
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
+}
+
+function modeLabel(mode: CalculatorMode): string {
+  return AVAILABLE_MODES.find((entry) => entry.id === mode)?.label ?? mode;
 }

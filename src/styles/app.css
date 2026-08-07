@@ -72,11 +72,39 @@
   text-transform: uppercase;
 }
 
+.display__expression {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--color-muted);
+  word-break: break-all;
+  text-align: right;
+  min-height: 1.25em;
+}
+
 .display__value {
   font-family: var(--font-mono);
   font-size: clamp(1.5rem, 6vw, 2.5rem);
   word-break: break-all;
   text-align: right;
+}
+
+.display__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
+.basic-view__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.basic-view__actions button {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
 }
 
 .keypad {
@@ -106,6 +134,41 @@
   border-color: transparent;
 }
 
+.key--equals {
+  grid-column: span 4;
+  background-color: var(--color-accent);
+  color: white;
+  border-color: transparent;
+  font-size: 1.4rem;
+}
+
+.history {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+}
+
+.history summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.history ol {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.placeholder {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-muted);
+}
+
 .settings-drawer {
   position: fixed;
   inset: 0;
@@ -126,4 +189,10 @@
 .error-boundary {
   padding: var(--space-6);
   text-align: center;
+}
+
+@media (max-width: 480px) {
+  .keypad {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
