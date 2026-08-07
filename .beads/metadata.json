@@ -1,0 +1,9 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "calcrepo_6d0819fe",
+  "project_id": "fe9bccd3-8fbd-4560-8c87-db9f7e5a336c",
+  "global_dolt_database": "beads_global",
+  "global_project_id": "00000000-0000-0000-0000-000000000000"
+}
