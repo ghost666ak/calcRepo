@@ -68,3 +68,5 @@
 sync.remote: "git+https://github.com/ghost666ak/calcRepo.git"
 dolt:
     shared-server: true
+export:
+    auto: true

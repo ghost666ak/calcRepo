@@ -1,0 +1,129 @@
+.app-shell {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.app-shell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.app-shell__title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-shell__settings {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+.app-shell__main {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.mode-tabs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mode-tabs__tab {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+}
+
+.mode-tabs__tab.is-active {
+  background-color: var(--color-accent);
+  color: white;
+  border-color: transparent;
+}
+
+.display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+.display__mode {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
+
+.display__value {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  word-break: break-all;
+  text-align: right;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.key {
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+}
+
+.key--operator {
+  background-color: var(--color-accent);
+  color: white;
+  border-color: transparent;
+}
+
+.key--action {
+  background-color: var(--color-fg);
+  color: var(--color-bg);
+  border-color: transparent;
+}
+
+.settings-drawer {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-drawer > * {
+  background-color: var(--color-surface);
+  padding: var(--space-4);
+  width: min(360px, 100%);
+  display: grid;
+  gap: var(--space-3);
+  border-left: 1px solid var(--color-border);
+}
+
+.error-boundary {
+  padding: var(--space-6);
+  text-align: center;
+}

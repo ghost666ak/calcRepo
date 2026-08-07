@@ -1,6 +1,22 @@
-
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Node / build artifacts
+node_modules/
+dist/
+.vite/
+.cache/
+coverage/
+playwright-report/
+test-results/
+.eslintcache
+.tsbuildinfo
+
+# Editor and OS metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
