@@ -17,6 +17,7 @@ export interface UseBasicCalculatorResult {
   readonly equals: () => void;
   readonly repeat: () => void;
   readonly copy: () => Promise<boolean>;
+  readonly consumeLatestEntry: () => BasicHistoryEntry | null;
 }
 
 const MAX_HISTORY = 20;
@@ -30,6 +31,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const [history, setHistory] = useState<readonly BasicHistoryEntry[]>([]);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastExpression, setLastExpression] = useState<string | null>(null);
+  const [latestEntry, setLatestEntry] = useState<BasicHistoryEntry | null>(null);
 
   const clear = useCallback(() => {
     setExpression('');
@@ -84,6 +86,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
           const entry: BasicHistoryEntry = { expression: current, result: result.formatted };
           return [entry, ...prev].slice(0, MAX_HISTORY);
         });
+        setLatestEntry({ expression: current, result: result.formatted });
         return result.formatted;
       }
       setError(result.message);
@@ -115,6 +118,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
       setLastExpression(repeated);
       setLastResult(result.formatted);
       setHistory((prev) => [{ expression: repeated, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
+      setLatestEntry({ expression: repeated, result: result.formatted });
     }
   }, [lastResult, lastExpression]);
 
@@ -127,6 +131,12 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
       return false;
     }
   }, [display]);
+
+  const consumeLatestEntry = useCallback(() => {
+    const entry = latestEntry;
+    setLatestEntry(null);
+    return entry;
+  }, [latestEntry]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -166,8 +176,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   }, [press, equals, backspace, clear]);
 
   return useMemo(
-    () => ({ expression, display, error, history, press, clear, backspace, equals, repeat, copy }),
-    [expression, display, error, history, press, clear, backspace, equals, repeat, copy],
+    () => ({ expression, display, error, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry }),
+    [expression, display, error, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry],
   );
 }
 

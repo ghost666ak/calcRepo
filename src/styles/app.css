@@ -26,6 +26,94 @@
   background-color: var(--color-surface);
 }
 
+.app-shell__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.app-shell__history {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+.settings-drawer__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.history-panel {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-bg);
+  padding: var(--space-4);
+  overflow: auto;
+  z-index: 30;
+}
+
+.history-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-panel__notice {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+.history-panel__controls {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-block: var(--space-3);
+}
+
+.history-panel__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.history-panel__entry {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.history-panel__expressions {
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+}
+
+.history-panel__meta {
+  display: flex;
+  gap: var(--space-2);
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.history-panel__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.history-panel__empty {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
 .app-shell__main {
   display: grid;
   gap: var(--space-4);
