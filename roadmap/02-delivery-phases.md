@@ -5,7 +5,7 @@
 Each phase has:
 
 - An epic or feature in Beads.
-- A Markdown specification (`docs/roadmap/0X-*.md`) that describes scope, contracts, work packages, and verification.
+- A Markdown specification (`roadmap/0X-*.md`) that describes scope, contracts, work packages, and verification.
 - A documented checkpoint: lint, typecheck, unit, end-to-end, and a browser run of representative flows.
 
 Phases are sequential; a phase begins only after the prior checkpoint is accepted.

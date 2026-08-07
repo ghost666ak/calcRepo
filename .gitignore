@@ -7,13 +7,6 @@
 # Node / build artifacts
 node_modules/
 dist/
-docs/assets/
-docs/index.html
-docs/manifest.webmanifest
-docs/sw.js
-docs/favicon.svg
-docs/pwa/
-docs/CNAME
 .vite/
 .cache/
 coverage/
@@ -21,6 +14,10 @@ playwright-report/
 test-results/
 .eslintcache
 .tsbuildinfo
+# Generated docs/ build output is committed for GitHub Pages branch-based
+# deploys. The source roadmap lives under docs/roadmap/ alongside it;
+# source files in docs/ should not be deleted or it will remove both.
+# When `npm run build:pages` regenerates docs/, just commit the changes.
 
 # Editor and OS metadata
 .DS_Store

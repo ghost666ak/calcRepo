@@ -21,7 +21,7 @@ This directory holds the durable product and engineering specifications for the 
 | 6     | Coding toolbox utilities                         | `calcrepo_6d0819fe-3ps.7`    |
 | 7     | Polish, offline support, and deployment          | `calcrepo_6d0819fe-3ps.8`    |
 
-The `docs/roadmap/0X-*.md` files for phases 1–7 will be added at the start of each respective phase, alongside the matching feature claim.
+The `0X-*.md` files for phases 1–7 live alongside the index in this directory.
 
 ## How to use these documents
 

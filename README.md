@@ -30,16 +30,16 @@ npm run preview   # Serve the built dist/ at http://localhost:4173
 
 ## Roadmap
 
-- [Product scope](docs/roadmap/00-product-scope.md)
-- [Mathematical semantics](docs/roadmap/01-math-semantics.md)
-- [Delivery phases](docs/roadmap/02-delivery-phases.md)
-- [Phase 1: Foundation](docs/roadmap/03-foundation.md)
-- [Phase 2: Basic calculator](docs/roadmap/04-basic-calculator.md)
-- [Phase 3: Scientific & trigonometry](docs/roadmap/05-scientific-trigonometry.md)
-- [Phase 4: Base conversion](docs/roadmap/06-base-conversion.md)
-- [Phase 5: Programmer & mixed-base](docs/roadmap/07-programmer-calculator.md)
-- [Phase 6: Coding toolbox](docs/roadmap/08-coding-toolbox.md)
-- [Phase 7: Polish & deployment](docs/roadmap/09-release-deployment.md)
+- [Product scope](roadmap/00-product-scope.md)
+- [Mathematical semantics](roadmap/01-math-semantics.md)
+- [Delivery phases](roadmap/02-delivery-phases.md)
+- [Phase 1: Foundation](roadmap/03-foundation.md)
+- [Phase 2: Basic calculator](roadmap/04-basic-calculator.md)
+- [Phase 3: Scientific & trigonometry](roadmap/05-scientific-trigonometry.md)
+- [Phase 4: Base conversion](roadmap/06-base-conversion.md)
+- [Phase 5: Programmer & mixed-base](roadmap/07-programmer-calculator.md)
+- [Phase 6: Coding toolbox](roadmap/08-coding-toolbox.md)
+- [Phase 7: Polish & deployment](roadmap/09-release-deployment.md)
 
 ## Architecture in one paragraph
 
