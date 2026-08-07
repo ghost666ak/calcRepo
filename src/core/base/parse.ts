@@ -70,6 +70,11 @@ export function parseBaseLiteral(input: string, explicitBase?: number): BasePars
     if (digitPart.includes('#')) {
       return { ok: false, error: { message: 'Do not combine explicit base with a base# prefix.', hint: 'Use one notation per value.' } };
     }
+    // Strip 0b/0o/0x prefix if it matches the explicit base, otherwise the prefix is rejected.
+    const lower = digitPart.toLowerCase();
+    if (base === 2 && lower.startsWith('0b')) digitPart = digitPart.slice(2);
+    else if (base === 8 && lower.startsWith('0o')) digitPart = digitPart.slice(2);
+    else if (base === 16 && lower.startsWith('0x')) digitPart = digitPart.slice(2);
   } else {
     const explicit = detectBaseLiteral(body);
     if (explicit) {
