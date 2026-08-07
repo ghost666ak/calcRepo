@@ -1,7 +1,10 @@
+import type { ErrorUx } from '../core/types';
+
 interface Props {
   readonly expression: string;
   /** Character offset in the expression to highlight. `null` means no highlight. */
   readonly errorPosition: number | null;
+  readonly errorUx: ErrorUx;
   readonly testId?: string;
 }
 
@@ -14,7 +17,12 @@ interface Props {
  * their typographic counterparts (`×`, `÷`, `−`) so the displayed expression
  * matches what the keypad shows.
  */
-export function ExpressionDisplay({ expression, errorPosition, testId }: Props): JSX.Element {
+export function ExpressionDisplay({
+  expression,
+  errorPosition,
+  errorUx,
+  testId,
+}: Props): JSX.Element {
   if (expression === '') {
     return (
       <span className="display__expression" data-testid={testId}>
@@ -22,7 +30,9 @@ export function ExpressionDisplay({ expression, errorPosition, testId }: Props):
       </span>
     );
   }
-  const segments = splitAtPosition(expression, errorPosition);
+  // `silent` mode skips the highlight; `highlight` and `verbose` keep it.
+  const showHighlight = errorUx !== 'silent' && errorPosition !== null;
+  const segments = splitAtPosition(expression, showHighlight ? errorPosition : null);
   return (
     <span className="display__expression" data-testid={testId}>
       {segments.map((segment, index) => (

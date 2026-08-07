@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CacheLevel, Theme } from '../core/types';
+import type { CacheLevel, ErrorUx, Theme } from '../core/types';
 import { usePreferences } from '../state/preferences';
 import { useHistory } from '../state/history';
 import { useTranslation } from '../i18n/useTranslation';
@@ -15,6 +15,27 @@ const CACHE_LEVELS: ReadonlyArray<{ value: CacheLevel; labelKey: string }> = [
   { value: 'shell', labelKey: 'settings.cacheLevelShell' },
   { value: 'assets', labelKey: 'settings.cacheLevelAssets' },
   { value: 'extended', labelKey: 'settings.cacheLevelExtended' },
+];
+const ERROR_UX_LEVELS: ReadonlyArray<{
+  value: ErrorUx;
+  labelKey: string;
+  hintKey: string;
+}> = [
+  {
+    value: 'verbose',
+    labelKey: 'settings.errorUxVerbose',
+    hintKey: 'settings.errorUxVerboseHint',
+  },
+  {
+    value: 'highlight',
+    labelKey: 'settings.errorUxHighlight',
+    hintKey: 'settings.errorUxHighlightHint',
+  },
+  {
+    value: 'silent',
+    labelKey: 'settings.errorUxSilent',
+    hintKey: 'settings.errorUxSilentHint',
+  },
 ];
 
 function formatBytes(bytes: number): string {
@@ -164,6 +185,27 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
             <p className="settings-drawer__hint">{t('settings.noUpdateAvailable')}</p>
           )
         )}
+      </section>
+
+      <section className="settings-drawer__section">
+        <h3>{t('settings.feedback')}</h3>
+        <fieldset>
+          <legend>{t('settings.errorUx')}</legend>
+          {ERROR_UX_LEVELS.map((level) => (
+            <label key={level.value} className="settings-drawer__option">
+              <input
+                type="radio"
+                name="errorUx"
+                value={level.value}
+                checked={preferences.errorUx === level.value}
+                onChange={() => update({ errorUx: level.value })}
+                data-testid={`error-ux-${level.value}`}
+              />
+              <span className="settings-drawer__option-label">{t(level.labelKey)}</span>
+              <span className="settings-drawer__hint">{t(level.hintKey)}</span>
+            </label>
+          ))}
+        </fieldset>
       </section>
 
       <section className="settings-drawer__section">

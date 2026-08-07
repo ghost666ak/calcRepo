@@ -3,6 +3,7 @@ import { Key } from '../../components/Key';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
+import { usePreferences } from '../../state/preferences';
 
 interface Props {
   readonly onHistoryChange?: (entry: BasicHistoryEntry) => void;
@@ -33,6 +34,8 @@ const KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'op
 
 export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
   const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry } = useBasicCalculator();
+  const { preferences } = usePreferences();
+  const showErrorText = preferences.errorUx === 'verbose';
 
   useEffect(() => {
     if (!onHistoryChange) return;
@@ -46,6 +49,7 @@ export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
         <ExpressionDisplay
           expression={expression}
           errorPosition={errorPosition}
+          errorUx={preferences.errorUx}
           testId="display-expression"
         />
         <output
@@ -55,7 +59,7 @@ export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
         >
           {display}
         </output>
-        {error && (
+        {showErrorText && error && (
           <p className="display__error" role="alert" data-testid="display-error">
             {error}
           </p>

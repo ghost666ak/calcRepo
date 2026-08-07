@@ -373,6 +373,22 @@
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
+.settings-drawer__option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-2);
+  row-gap: var(--space-1);
+  align-items: baseline;
+}
+
+.settings-drawer__option-label {
+  font-weight: 600;
+}
+
+.settings-drawer__option .settings-drawer__hint {
+  grid-column: 2;
+}
+
 .settings-drawer__update p {
   margin: 0;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AngleUnit, CacheLevel, Language, Preferences, Theme } from '../core/types';
+import type { AngleUnit, CacheLevel, ErrorUx, Language, Preferences, Theme } from '../core/types';
 
 const STORAGE_KEY = 'calcRepo.preferences.v1';
 
@@ -11,6 +11,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   language: 'en',
   pwaAutoUpdate: true,
   cacheLevel: 'assets',
+  errorUx: 'verbose',
 };
 
 function isAngleUnit(value: unknown): value is AngleUnit {
@@ -33,6 +34,10 @@ function isCacheLevel(value: unknown): value is CacheLevel {
   return value === 'shell' || value === 'assets' || value === 'extended';
 }
 
+function isErrorUx(value: unknown): value is ErrorUx {
+  return value === 'verbose' || value === 'highlight' || value === 'silent';
+}
+
 function readFromStorage(): Preferences {
   if (typeof window === 'undefined') {
     return DEFAULT_PREFERENCES;
@@ -49,6 +54,7 @@ function readFromStorage(): Preferences {
       language: isLanguage(parsed.language) ? parsed.language : 'en',
       pwaAutoUpdate: parsed.pwaAutoUpdate === undefined ? true : Boolean(parsed.pwaAutoUpdate),
       cacheLevel: isCacheLevel(parsed.cacheLevel) ? parsed.cacheLevel : 'assets',
+      errorUx: isErrorUx(parsed.errorUx) ? parsed.errorUx : 'verbose',
     };
   } catch {
     return DEFAULT_PREFERENCES;

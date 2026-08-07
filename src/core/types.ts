@@ -28,6 +28,17 @@ export type Language = 'en';
  */
 export type CacheLevel = 'shell' | 'assets' | 'extended';
 
+/**
+ * How much feedback the calculator shows when an expression has an error.
+ * - 'verbose'   — error text + character highlight + caret (default).
+ * - 'highlight' — character highlight only; no error message text.
+ * - 'silent'    — no error UI; auto-correct still happens but quietly.
+ *
+ * Auto-correct feedback (e.g. "Corrected: 8×(6+5)") is independent and is
+ * controlled by its own preference, not this one.
+ */
+export type ErrorUx = 'verbose' | 'highlight' | 'silent';
+
 export interface Preferences {
   readonly theme: Theme;
   readonly reducedMotion: boolean;
@@ -36,4 +47,5 @@ export interface Preferences {
   readonly language: Language;
   readonly pwaAutoUpdate: boolean;
   readonly cacheLevel: CacheLevel;
+  readonly errorUx: ErrorUx;
 }

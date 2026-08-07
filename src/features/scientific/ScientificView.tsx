@@ -3,6 +3,7 @@ import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useScientificCalculator } from './useScientificCalculator';
+import { usePreferences } from '../../state/preferences';
 
 interface ButtonProps {
   readonly label: string;
@@ -44,6 +45,8 @@ export function ScientificView(): JSX.Element {
     memoryRecall,
     memoryClear,
   } = useScientificCalculator();
+  const { preferences } = usePreferences();
+  const showErrorText = preferences.errorUx === 'verbose';
 
   const functions = listScientificFunctions();
 
@@ -81,12 +84,13 @@ export function ScientificView(): JSX.Element {
         <ExpressionDisplay
           expression={expression}
           errorPosition={errorPosition}
+          errorUx={preferences.errorUx}
           testId="display-expression"
         />
         <output className="display__value" data-testid="display-value" aria-live="polite">
           {display}
         </output>
-        {error && (
+        {showErrorText && error && (
           <p className="display__error" role="alert" data-testid="display-error">
             {error}
           </p>

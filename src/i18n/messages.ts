@@ -40,6 +40,14 @@ export interface Messages {
     readonly privacyNote: string;
     readonly rememberHistory: string;
     readonly maxEntries: string;
+    readonly feedback: string;
+    readonly errorUx: string;
+    readonly errorUxVerbose: string;
+    readonly errorUxVerboseHint: string;
+    readonly errorUxHighlight: string;
+    readonly errorUxHighlightHint: string;
+    readonly errorUxSilent: string;
+    readonly errorUxSilentHint: string;
   };
   readonly actions: {
     readonly copy: string;
@@ -86,6 +94,14 @@ const EN: Messages = {
     privacyNote: 'History and favorites stay on this device. No data is sent anywhere.',
     rememberHistory: 'Remember calculation history',
     maxEntries: 'Maximum entries',
+    feedback: 'Feedback',
+    errorUx: 'Error feedback level',
+    errorUxVerbose: 'Verbose',
+    errorUxVerboseHint: 'Message text + character highlight + caret.',
+    errorUxHighlight: 'Highlight only',
+    errorUxHighlightHint: 'Underline the bad character; no message text.',
+    errorUxSilent: 'Silent',
+    errorUxSilentHint: 'Auto-correct quietly; no on-screen indicator.',
   },
   actions: {
     copy: 'Copy',
