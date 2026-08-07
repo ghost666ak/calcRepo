@@ -41,7 +41,8 @@
       "Bash(node --experimental-strip-types scripts/generate-pwa-icons.ts)",
       "Bash(git commit -m 'feat\\(base+pwa\\): base converter UI with PWA manifest and offline service worker *)",
       "Bash(node -e ' *)",
-      "Bash(git commit -m 'feat\\(programmer\\): add mixed-base integer calculator with bitwise ops and width/signedness *)"
+      "Bash(git commit -m 'feat\\(programmer\\): add mixed-base integer calculator with bitwise ops and width/signedness *)",
+      "Bash(git commit -m 'fix\\(index.html\\): correct public asset paths to match Vite'\\\\''s public/ root serving *)"
     ]
   }
 }
