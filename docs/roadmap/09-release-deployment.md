@@ -52,10 +52,18 @@ Phases 2–6 made each calculator mode trustworthy on its own. Phase 7 turns the
 
 1. `npm ci`
 2. `npm run lint && npm run typecheck && npm test && npm run build`
-3. Inspect `dist/` (manifest, sw.js, pwa icons, hashed assets).
+3. Inspect `dist/` (manifest, sw.js, pwa icons, hashed assets). Base path is `/calcRepo/`.
 4. Upload `dist/` to the chosen static host.
-5. Confirm `https://<host>/manifest.webmanifest` resolves and `<host>/sw.js` is reachable so the PWA installs.
+5. Confirm `https://<host>/calcRepo/manifest.webmanifest` resolves and `<host>/calcRepo/sw.js` is reachable so the PWA installs.
 6. Smoke-test: install the app, go offline, reload — the shell should boot from the cache.
+
+### GitHub Pages specifics
+
+- The repo is currently private and on a free plan, so Pages is not enabled by default.
+- To enable: make the repo public, then either:
+  - **Branch-based**: run `npm run build:pages` (writes to `docs/`), commit and push, and in repo Settings → Pages choose Branch: `mainBranch`, Folder: `/docs`.
+  - **Actions-based**: add `.github/workflows/quality.yml` and `deploy.yml` (already written; current OAuth token lacks `workflow` scope, so they need to be added via the GitHub UI or a token with the scope) and trigger `deploy` from the Actions tab.
+- The live URL will be `https://<user>.github.io/calcRepo/`.
 
 The included `.github/workflows/quality.yml` runs the quality gates on every push and PR. The `deploy.yml` workflow is **manual-only** (`workflow_dispatch`) and gated by an `environment` so production publishes require explicit approval.
 

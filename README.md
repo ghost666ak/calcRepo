@@ -51,7 +51,22 @@ calcRepo runs entirely in the browser. No telemetry is collected by default. Pre
 
 ## Deployment
 
-`npm run build` produces a self-contained `dist/` directory with relative asset paths. Drop it onto any static host — GitHub Pages, Netlify, Cloudflare Pages, S3+CloudFront, or just open `dist/index.html` from disk. The included GitHub Actions workflow builds and tests on every push; a separate workflow publishes the built site on demand.
+`npm run build` produces a self-contained `dist/` directory using base path `/calcRepo/`. Drop it onto any static host — GitHub Pages, Netlify, Cloudflare Pages, S3+CloudFront, or just open `dist/index.html` from disk. The included GitHub Actions workflow builds and tests on every push; a separate workflow publishes the built site on demand.
+
+### GitHub Pages
+
+GitHub Pages only works on public repositories (or paid plans) and the current OAuth token lacks the `workflow` scope, so publishing is not enabled by default. To enable it:
+
+1. **Make the repo public** (Settings → General → Danger Zone → Change repository visibility).
+2. **Build into `docs/`** so Pages can serve from a branch without Actions:
+   ```bash
+   npm run build:pages
+   ```
+   This writes the static site to `docs/` (next to the existing `docs/roadmap/` source). The `.gitignore` excludes the generated files, so they ship only when you explicitly commit them.
+3. **Enable Pages**: Settings → Pages → Source: "Deploy from a branch" → Branch: `mainBranch`, Folder: `/docs`.
+4. Push and wait for the Pages build. The site will live at `https://<user>.github.io/calcRepo/`.
+
+For a CI-driven flow, the workflow files in `.github/workflows/` (already written) can be added once a token with the `workflow` scope is available. They run the quality gate, build `dist/`, and publish via `actions/deploy-pages`.
 
 ## Contributing
 

@@ -1,14 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Static site base is '/' so the built site works on GitHub Pages or any static host.
+// Base path matches the GitHub Pages project URL: https://<user>.github.io/calcRepo/
+// The relative `./` form also works but absolute paths are more robust for SW scoping.
+// Override at build time with `vite build --outDir docs` to publish via GitHub Pages
+// "Deploy from a branch" /docs source (no Actions required).
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: process.env['CALCREPO_BASE'] ?? '/calcRepo/',
   build: {
     target: 'es2022',
     sourcemap: true,
-    outDir: 'dist',
+    outDir: process.env['CALCREPO_OUTDIR'] ?? 'dist',
     emptyOutDir: true,
   },
   server: {

@@ -2,9 +2,9 @@
   "name": "calcRepo — Static developer calculator",
   "short_name": "calcRepo",
   "description": "Static, offline-capable developer calculator with basic, scientific, base, programmer, and coding tools.",
-  "start_url": "./",
-  "scope": "./",
-  "id": "/calcrepo",
+  "start_url": "/calcRepo/",
+  "scope": "/calcRepo/",
+  "id": "/calcRepo",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0f172a",
@@ -48,13 +48,13 @@
     {
       "name": "Scientific",
       "short_name": "Sci",
-      "url": "./?mode=scientific",
+      "url": "/calcRepo/?mode=scientific",
       "description": "Open the scientific calculator"
     },
     {
       "name": "Base",
       "short_name": "Base",
-      "url": "./?mode=base",
+      "url": "/calcRepo/?mode=base",
       "description": "Open the base converter"
     }
   ]

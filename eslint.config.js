@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results', 'coverage'] },
+  { ignores: ['dist', 'docs', 'node_modules', 'playwright-report', 'test-results', 'coverage'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -7,6 +7,13 @@
 # Node / build artifacts
 node_modules/
 dist/
+docs/assets/
+docs/index.html
+docs/manifest.webmanifest
+docs/sw.js
+docs/favicon.svg
+docs/pwa/
+docs/CNAME
 .vite/
 .cache/
 coverage/
