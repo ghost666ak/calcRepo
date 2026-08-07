@@ -55,16 +55,23 @@ calcRepo runs entirely in the browser. No telemetry is collected by default. Pre
 
 ### GitHub Pages
 
-GitHub Pages only works on public repositories (or paid plans) and the current OAuth token lacks the `workflow` scope, so publishing is not enabled by default. To enable it:
+Live site: **https://ghost666ak.github.io/calcRepo/**
 
-1. **Make the repo public** (Settings → General → Danger Zone → Change repository visibility).
-2. **Build into `docs/`** so Pages can serve from a branch without Actions:
-   ```bash
-   npm run build:pages
-   ```
-   This writes the static site to `docs/` (next to the existing `docs/roadmap/` source). The `.gitignore` excludes the generated files, so they ship only when you explicitly commit them.
-3. **Enable Pages**: Settings → Pages → Source: "Deploy from a branch" → Branch: `mainBranch`, Folder: `/docs`.
-4. Push and wait for the Pages build. The site will live at `https://<user>.github.io/calcRepo/`.
+Pages is configured to serve from the `gh-pages` branch root, which contains the production build (`dist/` output). The site is published via a small helper script:
+
+```bash
+npm run build:pages
+# Then publish to gh-pages from a clean worktree:
+git worktree add /tmp/gh-pages gh-pages || git worktree add /tmp/gh-pages -b gh-pages
+cd /tmp/gh-pages
+git rm -r . 2>/dev/null
+cp -r ../../docs/. .
+touch .nojekyll
+git add -A && git commit -m "publish" && git push origin gh-pages
+cd .. && git worktree remove /tmp/gh-pages --force
+```
+
+After the push, Pages rebuilds automatically (usually under a minute).
 
 For a CI-driven flow, the workflow files in `.github/workflows/` (already written) can be added once a token with the `workflow` scope is available. They run the quality gate, build `dist/`, and publish via `actions/deploy-pages`.
 

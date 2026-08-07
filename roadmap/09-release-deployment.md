@@ -59,11 +59,11 @@ Phases 2–6 made each calculator mode trustworthy on its own. Phase 7 turns the
 
 ### GitHub Pages specifics
 
-- The repo is currently private and on a free plan, so Pages is not enabled by default.
-- To enable: make the repo public, then either:
-  - **Branch-based**: run `npm run build:pages` (writes to `docs/`), commit and push, and in repo Settings → Pages choose Branch: `mainBranch`, Folder: `/docs`.
-  - **Actions-based**: add `.github/workflows/quality.yml` and `deploy.yml` (already written; current OAuth token lacks `workflow` scope, so they need to be added via the GitHub UI or a token with the scope) and trigger `deploy` from the Actions tab.
-- The live URL will be `https://<user>.github.io/calcRepo/`.
+- The repo is public and Pages is enabled; the live URL is `https://<user>.github.io/calcRepo/`.
+- Two viable deploy flows:
+  - **`gh-pages` branch (currently in use)**: build with `npm run build:pages`, copy the contents of `docs/` into a fresh `gh-pages` branch root, push the branch, and in repo Settings → Pages choose Branch: `gh-pages`, Folder: `/`. This works without GitHub Actions scope and serves at the project URL with absolute `/calcRepo/` paths.
+  - **Actions-based**: add `.github/workflows/quality.yml` and `deploy.yml` (already written locally; the OAuth token used for `git push` currently lacks the `workflow` scope, so they need to be added via the GitHub UI or a token with the scope). When in place, the `deploy` workflow runs `npm run build` and publishes `dist/` via `actions/deploy-pages`.
+- The roadmap source lives under `roadmap/` (root) — it is **not** served by Pages, since Pages only sees the `gh-pages` branch root which contains the build output.
 
 The included `.github/workflows/quality.yml` runs the quality gates on every push and PR. The `deploy.yml` workflow is **manual-only** (`workflow_dispatch`) and gated by an `environment` so production publishes require explicit approval.
 
@@ -73,6 +73,7 @@ The included `.github/workflows/quality.yml` runs the quality gates on every pus
 - [x] Settings drawer exposes the history toggle and explains the on-device privacy stance.
 - [x] ProgrammerView and ToolsView are lazy-loaded with `<Suspense>` fallback messaging.
 - [x] `public/sw.js` APP_SHELL paths corrected to root-relative (matches Vite production output).
+- [x] GitHub Pages live at `https://<user>.github.io/calcRepo/` via the `gh-pages` branch.
 - [x] Playwright + axe coverage extended to all five modes plus the history toggle.
 - [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` all pass.
 - [x] README usage + deployment sections replace the Phase 0 placeholder.
