@@ -91,3 +91,47 @@ describe('scientific function library', () => {
     if (result.ok) expect(result.formatted).toBe('1.4142');
   });
 });
+
+describe('scientific implicit multiplication + friendly errors', () => {
+  it('treats a number followed by "(" as multiplication', () => {
+    const result = evaluateScientific('88(2)', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBe(176);
+  });
+
+  it('treats ")" followed by "(" as multiplication', () => {
+    const result = evaluateScientific('(1+2)(3+4)', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBe(21);
+  });
+
+  it('treats a constant followed by "(" as multiplication', () => {
+    const result = evaluateScientific('pi(2)', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeCloseTo(Math.PI * 2, 10);
+  });
+
+  it('treats ")" followed by an identifier as multiplication', () => {
+    const result = evaluateScientific('2pi', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBeCloseTo(2 * Math.PI, 10);
+  });
+
+  it('rejects an empty expression with a friendly message', () => {
+    const result = evaluateScientific('', withOverrides());
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.kind).toBe('syntax');
+      expect(result.message).toMatch(/nothing to evaluate/i);
+    }
+  });
+
+  it('rejects a trailing operator with a friendly message', () => {
+    const result = evaluateScientific('2+', withOverrides());
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.kind).toBe('syntax');
+      expect(result.message).toMatch(/ends with an operator/i);
+    }
+  });
+});

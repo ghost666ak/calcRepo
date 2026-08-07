@@ -2,6 +2,28 @@ import type { ParseError } from './parse-error';
 import type { Token } from './token';
 
 const NUMBER_PATTERN = /^\d+(?:\.\d+)?|\.\d+/;
+
+// Numbers like "8.5.5" must be rejected at the tokeniser so implicit
+// multiplication does not silently turn a typo into a valid product.
+function looksLikeMultipleDecimal(input: string, start: number): boolean {
+  let sawDot = false;
+  let i = start;
+  while (i < input.length) {
+    const ch = input[i]!;
+    if (ch >= '0' && ch <= '9') {
+      i += 1;
+      continue;
+    }
+    if (ch === '.') {
+      if (sawDot) return true;
+      sawDot = true;
+      i += 1;
+      continue;
+    }
+    break;
+  }
+  return false;
+}
 const IDENT_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]*/;
 
 export function tokenize(input: string): readonly Token[] | { error: ParseError } {
@@ -19,6 +41,15 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
       continue;
     }
     if (ch >= '0' && ch <= '9' || ch === '.') {
+      if (looksLikeMultipleDecimal(input, i)) {
+        return {
+          error: {
+            message: 'Number has more than one decimal point.',
+            position: i,
+            hint: 'Use digits and a single decimal point.',
+          },
+        };
+      }
       const match = input.slice(i).match(NUMBER_PATTERN);
       if (!match) {
         return {
