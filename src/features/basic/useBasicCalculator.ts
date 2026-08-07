@@ -95,7 +95,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
           return [entry, ...prev].slice(0, MAX_HISTORY);
         });
         setLatestEntry({ expression: current, result: result.formatted });
-        return result.formatted;
+        // Keep the question visible — only the answer moves to the big display.
+        return current;
       }
       // Attempt a safe auto-correction (e.g. "(2+3" → "(2+3)").
       const corrected = autoCorrectParens(current, result);
@@ -113,7 +114,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         setLatestEntry({ expression: corrected.correctedFrom, result: corrected.formatted });
         setError(`${result.message} (auto-fixed: ${corrected.note})`);
         setErrorPosition(result.position ?? null);
-        return corrected.formatted;
+        // Update the expression so the user sees the corrected form (e.g. "(2+3").
+        return corrected.correctedFrom;
       }
       setError(result.message);
       setErrorPosition(result.position ?? null);

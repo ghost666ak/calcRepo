@@ -41,7 +41,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '7' }));
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '−' }));
-    expect(screen.getByTestId('display-expression')).toHaveTextContent('7-');
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('7−');
   });
 
   it('repeats the last result by adding it to itself', async () => {
@@ -64,9 +64,33 @@ describe('BasicView interactions', () => {
     await user.keyboard('(2+3');
     await user.keyboard('{Enter}');
     expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    // The original (corrected) expression stays visible above the answer.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('(2+3)');
     const error = screen.getByTestId('display-error');
     expect(error.textContent ?? '').toMatch(/auto-fixed/i);
     expect(error.textContent ?? '').toMatch(/missing "\)"/i);
+  });
+
+  it('keeps the original expression visible after a successful equals', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    // The expression above should still be the user's input.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('2+3');
+  });
+
+  it('renders * as × in the expression display without changing storage', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '×' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    // The display should render the multiplication sign as ×.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('2×3');
   });
 
   it('highlights the offending character when the parser rejects input', async () => {

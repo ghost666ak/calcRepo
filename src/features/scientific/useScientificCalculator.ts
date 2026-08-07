@@ -81,7 +81,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       if (result.ok) {
         setDisplay(result.formatted);
         setHistory((prev) => [{ expression: trimmed, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
-        return result.formatted;
+        // Keep the question visible; only the answer moves to the big display.
+        return trimmed;
       }
       const corrected = autoCorrectParens<number>(trimmed, result, {
         evaluate: (input) => evaluateScientific(input, options),
@@ -93,7 +94,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
         );
         setError(`${result.message} (auto-fixed: ${corrected.note})`);
         setErrorPosition(result.position ?? null);
-        return corrected.formatted;
+        // Show the corrected expression so the user can see what was fixed.
+        return corrected.correctedFrom;
       }
       setError(result.message);
       setErrorPosition(result.position ?? null);

@@ -9,6 +9,10 @@ interface Props {
  * Render an expression as a sequence of spans so the character at the error
  * position (if any) can carry a visual treatment. Falls back to a placeholder
  * when there is no expression.
+ *
+ * Internal operators are stored canonically (`*`, `/`, `-`) but rendered with
+ * their typographic counterparts (`×`, `÷`, `−`) so the displayed expression
+ * matches what the keypad shows.
  */
 export function ExpressionDisplay({ expression, errorPosition, testId }: Props): JSX.Element {
   if (expression === '') {
@@ -27,11 +31,26 @@ export function ExpressionDisplay({ expression, errorPosition, testId }: Props):
           className={segment.error ? 'display__expression-error' : undefined}
           data-error={segment.error ? 'true' : undefined}
         >
-          {segment.text}
+          {visualise(segment.text)}
         </span>
       ))}
     </span>
   );
+}
+
+const VISUAL_OPERATORS: Record<string, string> = {
+  '*': '×',
+  '/': '÷',
+  '-': '−',
+};
+
+function visualise(text: string): string {
+  let out = '';
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]!;
+    out += VISUAL_OPERATORS[ch] ?? ch;
+  }
+  return out;
 }
 
 interface Segment {

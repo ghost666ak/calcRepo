@@ -37,4 +37,21 @@ describe('ExpressionDisplay', () => {
     const errorSpan = screen.getByTestId('expr').querySelector('[data-error="true"]');
     expect(errorSpan?.textContent).toBe('+');
   });
+
+  it('renders * as × for display without changing the underlying value', () => {
+    render(<ExpressionDisplay expression="2*3" errorPosition={null} testId="expr" />);
+    expect(screen.getByTestId('expr')).toHaveTextContent('2×3');
+  });
+
+  it('renders / as ÷ and - as − for display', () => {
+    render(<ExpressionDisplay expression="6/2-1" errorPosition={null} testId="expr" />);
+    expect(screen.getByTestId('expr')).toHaveTextContent('6÷2−1');
+  });
+
+  it('keeps position offsets correct after the visual substitution', () => {
+    // The error position is an offset into the canonical expression.
+    render(<ExpressionDisplay expression="2*3" errorPosition={1} testId="expr" />);
+    const errorSpan = screen.getByTestId('expr').querySelector('[data-error="true"]');
+    expect(errorSpan?.textContent).toBe('×');
+  });
 });
