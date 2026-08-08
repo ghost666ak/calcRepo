@@ -428,26 +428,73 @@
 .settings-drawer {
   position: fixed;
   inset: 0;
-  background-color: rgba(15, 23, 42, 0.5);
+  z-index: 1000;
   display: flex;
   justify-content: flex-end;
-  z-index: 1000;
+}
+
+.settings-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(2px);
+  animation: settings-drawer-fade-in 160ms ease-out;
 }
 
-.settings-drawer > * {
+.settings-drawer__panel {
+  position: relative;
   background-color: var(--color-surface);
-  padding: var(--space-4);
-  width: min(380px, 100%);
-  display: grid;
-  gap: var(--space-3);
-  border-left: 1px solid var(--color-border);
+  width: min(420px, 100%);
+  height: 100vh;
+  max-height: 100dvh;
   overflow-y: auto;
-  max-height: 100vh;
+  border-left: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: settings-drawer-slide-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.settings-drawer > header {
+@keyframes settings-drawer-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes settings-drawer-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-drawer__backdrop,
+  .settings-drawer__panel {
+    animation: none;
+  }
+}
+
+/* On phones, take the full width and respect safe areas. */
+@media (max-width: 600px) {
+  .settings-drawer {
+    align-items: flex-end;
+  }
+  .settings-drawer__panel {
+    width: 100%;
+    max-height: 92dvh;
+    border-left: none;
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+    animation: settings-drawer-slide-up 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes settings-drawer-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}
+
+.settings-drawer__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -458,15 +505,18 @@
   top: 0;
   background-color: var(--color-surface);
   z-index: 1;
+  margin-block: calc(var(--space-4) * -1);
+  padding-inline: calc(var(--space-4) * -1);
+  padding: var(--space-3) var(--space-4);
 }
 
-.settings-drawer > header h2 {
+.settings-drawer__header h2 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.settings-drawer > header button {
+.settings-drawer__header button {
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -476,7 +526,7 @@
   transition: background-color 120ms ease, border-color 120ms ease;
 }
 
-.settings-drawer > header button:hover {
+.settings-drawer__header button:hover {
   background-color: var(--color-surface-2);
   border-color: var(--color-accent);
 }

@@ -77,16 +77,33 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
     setLastUpdateCheck({ at: Date.now(), hasUpdate });
   }, [checkForUpdate]);
 
+  // ESC closes the drawer; lock body scroll while open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
-    <aside className="settings-drawer" role="dialog" aria-modal="true" aria-label={t('settings.title')}>
-      <header>
-        <h2>{t('settings.title')}</h2>
-        <button type="button" onClick={onClose} aria-label={t('settings.close')}>
-          {t('settings.close')}
-        </button>
-      </header>
+    <div className="settings-drawer" role="dialog" aria-modal="true" aria-label={t('settings.title')}>
+      <div className="settings-drawer__backdrop" onClick={onClose} aria-hidden="true" />
+      <div className="settings-drawer__panel">
+        <header className="settings-drawer__header">
+          <h2>{t('settings.title')}</h2>
+          <button type="button" onClick={onClose} aria-label={t('settings.close')}>
+            {t('settings.close')}
+          </button>
+        </header>
 
       <section className="settings-drawer__section">
         <h3>{t('settings.appearance')}</h3>
@@ -231,6 +248,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
           />
         </label>
       </section>
-    </aside>
+      </div>
+    </div>
   );
 }
