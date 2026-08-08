@@ -11,6 +11,7 @@ import { useHistory } from '../state/history';
 import type { BasicHistoryEntry } from '../features/basic/useBasicCalculator';
 import { lazy, Suspense } from 'react';
 import { useUrlParams } from './useUrlParams';
+import { useTheme } from './useTheme';
 
 const ProgrammerView = lazy(() =>
   import('../features/programmer/ProgrammerView').then((m) => ({ default: m.ProgrammerView })),
@@ -26,6 +27,7 @@ export function AppShell(): JSX.Element {
   const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history);
   const { preferences } = usePreferences();
   const { settings, record, forceRecord } = useHistory();
+  useTheme(preferences.theme);
 
   // Track previous drawer state so opening a drawer pushes a history entry
   // (so back button closes it) and closing just replaces in place.
@@ -95,7 +97,7 @@ export function AppShell(): JSX.Element {
   );
 
   return (
-    <div className="app-shell" data-theme={preferences.theme}>
+    <div className="app-shell">
       <header className="app-shell__header">
         <h1 className="app-shell__title">calcRepo</h1>
         <div className="app-shell__actions">

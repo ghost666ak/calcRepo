@@ -1,15 +1,32 @@
+/* Design tokens for calcRepo.
+ *
+ * The user's preference (light / dark / system) is resolved by useTheme() and
+ * applied to <html data-theme="...">. Body background and global UI live on
+ * :root, so the resolved theme has to override :root — not .app-shell — for
+ * the change to be visible without a refresh.
+ *
+ * The `prefers-color-scheme` media query is kept as a fallback for the brief
+ * window before useTheme() runs (and to support browsers / contexts where JS
+ * hasn't booted yet). Once the React effect runs, [data-theme] wins.
+ */
+
 :root {
   --color-bg: #f8fafc;
   --color-fg: #0f172a;
   --color-muted: #475569;
   --color-text: #0f172a;
   --color-accent: #0ea5e9;
+  --color-accent-fg: #ffffff;
   --color-accent-soft: #e0f2fe;
   --color-error: #b91c1c;
+  --color-error-soft: rgba(185, 28, 28, 0.12);
   --color-success: #10b981;
+  --color-success-soft: rgba(16, 185, 129, 0.15);
   --color-surface: #ffffff;
   --color-surface-2: #f1f5f9;
   --color-border: #cbd5f5;
+  --color-shadow: rgba(15, 23, 42, 0.08);
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 18px;
@@ -18,56 +35,76 @@
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 2px var(--color-shadow);
+  --shadow-md: 0 4px 12px var(--color-shadow);
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #020617;
-    --color-fg: #e2e8f0;
-    --color-muted: #94a3b8;
-    --color-text: #e2e8f0;
-    --color-accent: #38bdf8;
-    --color-accent-soft: rgba(56, 189, 248, 0.15);
-    --color-error: #f87171;
-    --color-success: #34d399;
-    --color-surface: #0f172a;
-    --color-surface-2: #1e293b;
-    --color-border: #1e293b;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  }
-}
-
-[data-theme='light'] {
+:root[data-theme='light'] {
   --color-bg: #f8fafc;
   --color-fg: #0f172a;
   --color-muted: #475569;
   --color-text: #0f172a;
   --color-accent: #0ea5e9;
+  --color-accent-fg: #ffffff;
   --color-accent-soft: #e0f2fe;
   --color-error: #b91c1c;
+  --color-error-soft: rgba(185, 28, 28, 0.12);
   --color-success: #10b981;
+  --color-success-soft: rgba(16, 185, 129, 0.15);
   --color-surface: #ffffff;
   --color-surface-2: #f1f5f9;
   --color-border: #cbd5f5;
+  --color-shadow: rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 2px var(--color-shadow);
+  --shadow-md: 0 4px 12px var(--color-shadow);
 }
 
-[data-theme='dark'] {
+:root[data-theme='dark'] {
   --color-bg: #020617;
   --color-fg: #e2e8f0;
   --color-muted: #94a3b8;
   --color-text: #e2e8f0;
   --color-accent: #38bdf8;
+  --color-accent-fg: #020617;
   --color-accent-soft: rgba(56, 189, 248, 0.15);
   --color-error: #f87171;
+  --color-error-soft: rgba(248, 113, 113, 0.18);
   --color-success: #34d399;
+  --color-success-soft: rgba(52, 211, 153, 0.18);
   --color-surface: #0f172a;
   --color-surface-2: #1e293b;
   --color-border: #1e293b;
+  --color-shadow: rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px var(--color-shadow);
+  --shadow-md: 0 4px 12px var(--color-shadow);
+}
+
+/* Fallback for the brief moment before React applies [data-theme]. If the user
+ * has saved a preference, the inline boot script in index.html sets [data-theme]
+ * synchronously and this media query never matters. If JS is disabled, this
+ * keeps the app usable by following the OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #020617;
+    --color-fg: #e2e8f0;
+    --color-muted: #94a3b8;
+    --color-text: #e2e8f0;
+    --color-accent: #38bdf8;
+    --color-accent-fg: #020617;
+    --color-accent-soft: rgba(56, 189, 248, 0.15);
+    --color-error: #f87171;
+    --color-error-soft: rgba(248, 113, 113, 0.18);
+    --color-success: #34d399;
+    --color-success-soft: rgba(52, 211, 153, 0.18);
+    --color-surface: #0f172a;
+    --color-surface-2: #1e293b;
+    --color-border: #1e293b;
+    --color-shadow: rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 2px var(--color-shadow);
+    --shadow-md: 0 4px 12px var(--color-shadow);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

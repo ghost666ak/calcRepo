@@ -229,7 +229,7 @@
 
 .mode-tabs__tab.is-active {
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-fg);
   border-color: transparent;
 }
 
@@ -301,7 +301,7 @@
 .display__expression-error {
   display: inline-block;
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 18%, transparent);
+  background: var(--color-error-soft);
   border-bottom: 2px solid var(--color-error);
   border-radius: 2px;
   padding: 0 1px;
@@ -309,8 +309,8 @@
 }
 
 @keyframes display-error-pulse {
-  0%, 100% { background: color-mix(in srgb, var(--color-error) 18%, transparent); }
-  50% { background: color-mix(in srgb, var(--color-error) 32%, transparent); }
+  0%, 100% { background: var(--color-error-soft); }
+  50% { background: color-mix(in srgb, var(--color-error) 22%, var(--color-error-soft)); }
 }
 
 .basic-view__actions {
@@ -412,7 +412,7 @@
 
 .basic-view__action--copied {
   background-color: var(--color-success) !important;
-  color: white !important;
+  color: var(--color-accent-fg) !important;
   border-color: transparent !important;
 }
 
@@ -451,18 +451,19 @@
 
 .key--operator {
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-fg);
   border-color: transparent;
 }
 
 .key--operator:hover {
-  /* Slightly darker accent on hover without losing visibility on the blue bg */
-  background-color: color-mix(in srgb, var(--color-accent) 80%, black);
+  /* Slightly tone-shifted accent on hover; mixing toward surface-2 works in
+     both light (deepens the blue) and dark (cools the cyan) themes. */
+  background-color: color-mix(in srgb, var(--color-accent) 80%, var(--color-surface-2));
   border-color: transparent;
 }
 
 .key--operator:active {
-  background-color: color-mix(in srgb, var(--color-accent) 70%, black);
+  background-color: color-mix(in srgb, var(--color-accent) 70%, var(--color-surface-2));
 }
 
 .key--action {
@@ -472,29 +473,29 @@
 }
 
 .key--action:hover {
-  background-color: color-mix(in srgb, var(--color-fg) 85%, transparent);
+  background-color: color-mix(in srgb, var(--color-fg) 85%, var(--color-surface-2));
   border-color: transparent;
 }
 
 .key--action:active {
-  background-color: color-mix(in srgb, var(--color-fg) 70%, transparent);
+  background-color: color-mix(in srgb, var(--color-fg) 70%, var(--color-surface-2));
 }
 
 .key--equals {
   grid-column: span 4;
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-fg);
   border-color: transparent;
   font-size: 1.4rem;
 }
 
 .key--equals:hover {
-  background-color: color-mix(in srgb, var(--color-accent) 85%, black);
+  background-color: color-mix(in srgb, var(--color-accent) 85%, var(--color-surface-2));
   border-color: transparent;
 }
 
 .key--equals:active {
-  background-color: color-mix(in srgb, var(--color-accent) 70%, black);
+  background-color: color-mix(in srgb, var(--color-accent) 70%, var(--color-surface-2));
 }
 
 .history {
@@ -580,7 +581,7 @@
 
 .history li button:hover {
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-fg);
 }
 
 .history__auto-save-hint {
@@ -851,7 +852,7 @@
   margin: 0;
   padding: var(--space-2) var(--space-3);
   color: var(--color-success);
-  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  background-color: var(--color-success-soft);
   border-left: 3px solid var(--color-success);
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -877,7 +878,7 @@
   border: none;
   border-radius: var(--radius-sm);
   background-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-fg);
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -1265,7 +1266,7 @@
   margin: 0;
   padding: var(--space-2) var(--space-3);
   color: var(--color-error);
-  background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
+  background-color: var(--color-error-soft);
   border-left: 3px solid var(--color-error);
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
