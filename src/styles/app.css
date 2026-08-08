@@ -102,12 +102,6 @@
   border-color: var(--color-accent);
 }
 
-.history-panel__notice {
-  padding: var(--space-2);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface);
-}
-
 .history-panel__controls {
   display: flex;
   gap: var(--space-2);
@@ -125,20 +119,31 @@
 }
 
 .history-panel__entry {
+  /* Two columns: expression+meta on the left, actions pinned to the right
+     and vertically centred across both rows so the right edge is no longer
+     dead space and Pin/Remove don't drift under the date. */
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'expression actions'
+    'meta actions';
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-surface);
+  align-items: center;
 }
 
 .history-panel__expressions {
+  grid-area: expression;
   font-family: ui-monospace, monospace;
   word-break: break-all;
 }
 
 .history-panel__meta {
+  grid-area: meta;
   display: flex;
   gap: var(--space-2);
   color: var(--color-muted);
@@ -146,10 +151,41 @@
   flex-wrap: wrap;
 }
 
+.history-panel__mode {
+  text-transform: capitalize;
+}
+
 .history-panel__actions {
+  grid-area: actions;
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
   flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.history-panel__actions button {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-2);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.history-panel__actions button:hover {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.history-panel__notice {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-2);
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-text);
+  font-size: 0.85rem;
 }
 
 .history-panel__empty {
@@ -440,6 +476,36 @@
 .history li strong {
   color: var(--color-accent);
   margin-left: auto;
+}
+
+.history li button {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-family: var(--font-sans, system-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.history li button:hover {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.history__auto-save-hint {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-2);
+  border-left: 3px solid var(--color-accent);
+  font-family: var(--font-sans, system-ui);
+  font-size: 0.75rem;
+  color: var(--color-muted);
 }
 
 .placeholder {

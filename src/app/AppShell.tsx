@@ -25,7 +25,7 @@ export function AppShell(): JSX.Element {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(initial.settings);
   const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history);
   const { preferences } = usePreferences();
-  const { record } = useHistory();
+  const { settings, record, forceRecord } = useHistory();
 
   // Track previous drawer state so opening a drawer pushes a history entry
   // (so back button closes it) and closing just replaces in place.
@@ -77,6 +77,23 @@ export function AppShell(): JSX.Element {
     [record],
   );
 
+  const handleScientificHistory = useCallback(
+    (entry: { expression: string; result: string }) => {
+      record({ kind: 'expression', expression: entry.expression, result: entry.result, mode: 'scientific' });
+    },
+    [record],
+  );
+
+  // Manual save for inline history entries when auto-save is off. Uses
+  // forceRecord() so it bypasses the enabled flag — the entry still gets
+  // deduped and capped by maxEntries like an auto-saved one.
+  const handleManualSave = useCallback(
+    (entry: { expression: string; result: string }, mode: string) => {
+      forceRecord({ kind: 'expression', expression: entry.expression, result: entry.result, mode });
+    },
+    [forceRecord],
+  );
+
   return (
     <div className="app-shell" data-theme={preferences.theme}>
       <header className="app-shell__header">
@@ -105,8 +122,20 @@ export function AppShell(): JSX.Element {
       </header>
       <ModeTabs modes={AVAILABLE_MODES} value={mode} onChange={setMode} />
       <main className="app-shell__main" aria-live="polite">
-        {mode === 'basic' && <BasicView onHistoryChange={handleBasicHistory} />}
-        {mode === 'scientific' && <ScientificView />}
+        {mode === 'basic' && (
+          <BasicView
+            onHistoryChange={handleBasicHistory}
+            autoSaveEnabled={settings.enabled}
+            onManualSave={(entry) => handleManualSave(entry, 'basic')}
+          />
+        )}
+        {mode === 'scientific' && (
+          <ScientificView
+            onHistoryChange={handleScientificHistory}
+            autoSaveEnabled={settings.enabled}
+            onManualSave={(entry) => handleManualSave(entry, 'scientific')}
+          />
+        )}
         {mode === 'base' && <BaseView />}
         {mode === 'programmer' && (
           <Suspense fallback={<p role="status">Loading programmer mode…</p>}>

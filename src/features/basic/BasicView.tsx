@@ -4,9 +4,14 @@ import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
 import { usePreferences } from '../../state/preferences';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   readonly onHistoryChange?: (entry: BasicHistoryEntry) => void;
+  /** When auto-save is off, the caller passes a forceRecord so each inline
+   *  entry can be promoted into persistent history manually. */
+  readonly autoSaveEnabled?: boolean;
+  readonly onManualSave?: (entry: BasicHistoryEntry) => void;
 }
 
 const KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'operator' | 'action' }> = [
@@ -32,9 +37,14 @@ const KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'op
   { label: '+', value: '+', variant: 'operator' },
 ];
 
-export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
+export function BasicView({
+  onHistoryChange,
+  autoSaveEnabled = true,
+  onManualSave,
+}: Props = {}): JSX.Element {
   const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry } = useBasicCalculator();
   const { preferences } = usePreferences();
+  const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
 
   useEffect(() => {
@@ -91,12 +101,25 @@ export function BasicView({ onHistoryChange }: Props = {}): JSX.Element {
       {history.length > 0 && (
         <details className="history" data-testid="history">
           <summary>History ({history.length})</summary>
+          {!autoSaveEnabled && onManualSave && (
+            <p className="history__auto-save-hint">{t('history.inlineAutoSaveHint')}</p>
+          )}
           <ol>
             {history.map((entry, index) => (
               <li key={`${entry.expression}-${index}`}>
                 <code>{entry.expression}</code>
                 <span> = </span>
                 <strong>{entry.result}</strong>
+                {!autoSaveEnabled && onManualSave && (
+                  <button
+                    type="button"
+                    onClick={() => onManualSave(entry)}
+                    aria-label={t('history.saveEntry')}
+                    data-testid="save-history-entry"
+                  >
+                    {t('history.saveEntry')}
+                  </button>
+                )}
               </li>
             ))}
           </ol>

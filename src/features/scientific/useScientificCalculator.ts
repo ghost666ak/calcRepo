@@ -15,6 +15,7 @@ export interface UseScientificCalculatorResult {
   readonly error: string | null;
   readonly errorPosition: number | null;
   readonly history: readonly ScientificHistoryEntry[];
+  readonly consumeLatestEntry: () => ScientificHistoryEntry | null;
   readonly angleUnit: AngleUnit;
   readonly precisionDigits: number;
   readonly memory: number;
@@ -39,6 +40,10 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   const [error, setError] = useState<string | null>(null);
   const [errorPosition, setErrorPosition] = useState<number | null>(null);
   const [history, setHistory] = useState<readonly ScientificHistoryEntry[]>([]);
+  // Latest entry is only consumed via setLatestEntry's callback (see
+  // consumeLatestEntry); we never read the state value directly, so the
+  // leading underscore silences @typescript-eslint/no-unused-vars.
+  const [, setLatestEntry] = useState<ScientificHistoryEntry | null>(null);
   const [memory, setMemory] = useState(0);
 
   const clear = useCallback(() => {
@@ -81,6 +86,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       if (result.ok) {
         setDisplay(result.formatted);
         setHistory((prev) => [{ expression: trimmed, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
+        setLatestEntry({ expression: trimmed, result: result.formatted });
         // Keep the question visible; only the answer moves to the big display.
         return trimmed;
       }
@@ -92,6 +98,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
         setHistory((prev) =>
           [{ expression: corrected.correctedFrom, result: corrected.formatted }, ...prev].slice(0, MAX_HISTORY),
         );
+        setLatestEntry({ expression: corrected.correctedFrom, result: corrected.formatted });
         setError(`${result.message} (auto-fixed: ${corrected.note})`);
         setErrorPosition(result.position ?? null);
         // Show the corrected expression so the user can see what was fixed.
@@ -153,6 +160,15 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setMemory(0);
   }, []);
 
+  const consumeLatestEntry = useCallback((): ScientificHistoryEntry | null => {
+    let captured: ScientificHistoryEntry | null = null;
+    setLatestEntry((current) => {
+      if (current) captured = current;
+      return null;
+    });
+    return captured;
+  }, []);
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -185,6 +201,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       error,
       errorPosition,
       history,
+      consumeLatestEntry,
       angleUnit: preferences.angleUnit,
       precisionDigits: preferences.precisionDigits,
       memory,
@@ -205,6 +222,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       error,
       errorPosition,
       history,
+      consumeLatestEntry,
       preferences.angleUnit,
       preferences.precisionDigits,
       memory,

@@ -237,6 +237,9 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
           />
           {t('settings.rememberHistory')}
         </label>
+        {!settings.enabled && (
+          <p className="settings-drawer__hint">{t('settings.autoSaveHistoryHint')}</p>
+        )}
         <label>
           {t('settings.maxEntries')}
           <input

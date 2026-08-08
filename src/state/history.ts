@@ -101,6 +101,7 @@ export interface UseHistoryResult {
   readonly toggleEnabled: () => void;
   readonly setMaxEntries: (next: number) => void;
   readonly record: (entry: Omit<HistoryEntry, 'id' | 'createdAt' | 'pinned'>) => void;
+  readonly forceRecord: (entry: Omit<HistoryEntry, 'id' | 'createdAt' | 'pinned'>) => void;
   readonly clear: () => void;
   readonly togglePin: (id: string) => void;
   readonly remove: (id: string) => void;
@@ -157,6 +158,33 @@ export function useHistory(): UseHistoryResult {
     [settings.enabled, settings.maxEntries],
   );
 
+  // Same as record() but bypasses the enabled flag — used by the "Save" button
+  // on each inline history entry so users who keep auto-save off can still
+  // cherry-pick what to persist.
+  const forceRecord = useCallback(
+    (entry: Omit<HistoryEntry, 'id' | 'createdAt' | 'pinned'>) => {
+      const id = generateId();
+      setEntries((current) => {
+        const trimmed = current.filter(
+          (existing) => existing.pinned || existing.expression !== entry.expression || existing.result !== entry.result,
+        );
+        const nextEntry: HistoryEntry = {
+          ...entry,
+          id,
+          createdAt: Date.now(),
+          pinned: false,
+        };
+        const combined = [nextEntry, ...trimmed];
+        const overflow = combined.length - settings.maxEntries;
+        if (overflow <= 0) return combined;
+        const pinned = combined.filter((entry) => entry.pinned);
+        const recent = combined.filter((entry) => !entry.pinned).slice(0, settings.maxEntries - pinned.length);
+        return [...pinned, ...recent];
+      });
+    },
+    [settings.maxEntries],
+  );
+
   const clear = useCallback(() => {
     setEntries((current) => current.filter((entry) => entry.pinned));
   }, []);
@@ -171,5 +199,5 @@ export function useHistory(): UseHistoryResult {
     setEntries((current) => current.filter((entry) => entry.id !== id));
   }, []);
 
-  return { settings, entries, toggleEnabled, setMaxEntries, record, clear, togglePin, remove };
+  return { settings, entries, toggleEnabled, setMaxEntries, record, forceRecord, clear, togglePin, remove };
 }

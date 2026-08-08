@@ -39,6 +39,7 @@ export interface Messages {
     readonly privacy: string;
     readonly privacyNote: string;
     readonly rememberHistory: string;
+    readonly autoSaveHistoryHint: string;
     readonly maxEntries: string;
     readonly feedback: string;
     readonly errorUx: string;
@@ -54,6 +55,24 @@ export interface Messages {
     readonly repeat: string;
     readonly clear: string;
     readonly backspace: string;
+    readonly save: string;
+    readonly remove: string;
+  };
+  readonly history: {
+    readonly autoSaveOffNotice: string;
+    readonly inlineAutoSaveHint: string;
+    readonly saveEntry: string;
+    readonly removeEntry: string;
+  };
+  readonly historyPanel: {
+    readonly all: string;
+    readonly pinnedOnly: string;
+    readonly clearUnpinned: string;
+    readonly empty: string;
+    readonly reuse: string;
+    readonly pin: string;
+    readonly unpin: string;
+    readonly remove: string;
   };
 }
 
@@ -92,7 +111,8 @@ const EN: Messages = {
     noUpdateAvailable: 'You are on the latest version.',
     privacy: 'Privacy',
     privacyNote: 'History and favorites stay on this device. No data is sent anywhere.',
-    rememberHistory: 'Remember calculation history',
+    rememberHistory: 'Auto-save calculation history',
+    autoSaveHistoryHint: 'When off, use the Save button on each entry below the calculator to keep it.',
     maxEntries: 'Maximum entries',
     feedback: 'Feedback',
     errorUx: 'Error feedback level',
@@ -108,6 +128,24 @@ const EN: Messages = {
     repeat: 'Repeat (+)',
     clear: 'Clear',
     backspace: 'Backspace',
+    save: 'Save',
+    remove: 'Remove',
+  },
+  history: {
+    autoSaveOffNotice: 'Auto-save history is off. Enable it in settings to start recording calculations.',
+    inlineAutoSaveHint: 'Auto-save is off — tap Save to keep an entry.',
+    saveEntry: 'Save to history',
+    removeEntry: 'Discard',
+  },
+  historyPanel: {
+    all: 'All',
+    pinnedOnly: 'Pinned only',
+    clearUnpinned: 'Clear unpinned',
+    empty: 'No history yet.',
+    reuse: 'Reuse',
+    pin: 'Pin',
+    unpin: 'Unpin',
+    remove: 'Remove',
   },
 };
 

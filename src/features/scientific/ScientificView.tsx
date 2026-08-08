@@ -1,15 +1,26 @@
+import { useEffect } from 'react';
 import { listScientificFunctions } from '../../core/scientific/functions';
 import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useScientificCalculator } from './useScientificCalculator';
+import type { ScientificHistoryEntry } from './useScientificCalculator';
 import { usePreferences } from '../../state/preferences';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ButtonProps {
   readonly label: string;
   readonly value: string;
   readonly onPress: (value: string) => void;
   readonly variant?: 'digit' | 'operator' | 'function' | 'action';
+}
+
+interface ScientificViewProps {
+  readonly onHistoryChange?: (entry: ScientificHistoryEntry) => void;
+  /** When auto-save is off, the caller passes a forceRecord so each inline
+   *  entry can be promoted into persistent history manually. */
+  readonly autoSaveEnabled?: boolean;
+  readonly onManualSave?: (entry: ScientificHistoryEntry) => void;
 }
 
 function Button({ label, value, onPress, variant = 'function' }: ButtonProps): JSX.Element {
@@ -26,13 +37,18 @@ function Button({ label, value, onPress, variant = 'function' }: ButtonProps): J
   );
 }
 
-export function ScientificView(): JSX.Element {
+export function ScientificView({
+  onHistoryChange,
+  autoSaveEnabled = true,
+  onManualSave,
+}: ScientificViewProps = {}): JSX.Element {
   const {
     expression,
     display,
     error,
     errorPosition,
     history,
+    consumeLatestEntry,
     angleUnit,
     precisionDigits,
     memory,
@@ -46,7 +62,14 @@ export function ScientificView(): JSX.Element {
     memoryClear,
   } = useScientificCalculator();
   const { preferences } = usePreferences();
+  const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
+
+  useEffect(() => {
+    if (!onHistoryChange) return;
+    const entry = consumeLatestEntry();
+    if (entry) onHistoryChange(entry);
+  });
 
   const functions = listScientificFunctions();
 
@@ -160,12 +183,25 @@ export function ScientificView(): JSX.Element {
       {history.length > 0 && (
         <details className="history" data-testid="history">
           <summary>History ({history.length})</summary>
+          {!autoSaveEnabled && onManualSave && (
+            <p className="history__auto-save-hint">{t('history.inlineAutoSaveHint')}</p>
+          )}
           <ol>
             {history.map((entry, index) => (
               <li key={`${entry.expression}-${index}`}>
                 <code>{entry.expression}</code>
                 <span> = </span>
                 <strong>{entry.result}</strong>
+                {!autoSaveEnabled && onManualSave && (
+                  <button
+                    type="button"
+                    onClick={() => onManualSave(entry)}
+                    aria-label={t('history.saveEntry')}
+                    data-testid="save-history-entry"
+                  >
+                    {t('history.saveEntry')}
+                  </button>
+                )}
               </li>
             ))}
           </ol>
