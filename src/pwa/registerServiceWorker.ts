@@ -19,50 +19,25 @@ export function registerServiceWorker(): void {
     }
   };
 
-  const wireUpdateListener = (registration: ServiceWorkerRegistration): void => {
-    // If a new worker has installed and is waiting, tell it to take over now.
-    // skipWaiting() + clients.claim() in the SW make this safe; we then reload
-    // so the page runs the bundle that matches the active SW.
-    const onStateChange = (): void => {
-      const installing = registration.installing;
-      if (!installing) return;
-      installing.addEventListener('statechange', () => {
-        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-          installing.postMessage('SKIP_WAITING');
-        }
-      });
-    };
-    onStateChange();
-
-    // When a new SW takes control of this page, reload once so the new bundle
-    // (whose hash is referenced by the freshly-cached index.html) actually runs.
-    // Without this the old JS keeps handling user actions even though the new
-    // SW is now in charge.
-    let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded) return;
-      reloaded = true;
-      window.location.reload();
-    });
-  };
-
   window.addEventListener('load', () => {
     const base = import.meta.env.BASE_URL || '/';
-    // Cache-bust the SW URL so the browser always re-checks for an updated
-    // worker. Without the query string, some browsers serve a cached sw.js
-    // even when registration.update() is called, leaving the user stuck on
-    // an old worker.
-    const swUrl = `${base}sw.js?v=${Date.now()}`;
+    // IMPORTANT: register with a stable URL (no query string). Appending
+    // `?v=...` looks like a cache-bust but it actually causes the browser
+    // to treat every page load as a brand-new SW, which triggers an
+    // install + skipWaiting + controllerchange loop that reloads the page
+    // forever. The browser already re-checks sw.js byte-for-byte when
+    // registration.update() is called below, so no query string is needed.
+    //
+    // Note: the controllerchange -> reload behaviour is owned by usePwaStatus,
+    // not here, to avoid duplicate listeners causing extra reloads.
     navigator.serviceWorker
-      .register(swUrl, { scope: base })
+      .register(`${base}sw.js`, { scope: base })
       .then((registration) => {
         postCacheLevel(registration);
-        wireUpdateListener(registration);
 
-        // If a worker is already waiting (i.e. another tab fetched sw.js and
-        // triggered its install but the page that registered first never got
-        // told to activate it), kick it off here so this tab doesn't stay on
-        // the old bundle.
+        // If a worker is already waiting (another tab fetched sw.js first and
+        // triggered its install but never told it to take over), kick it off
+        // here so this tab doesn't stay on the old bundle.
         if (registration.waiting) {
           registration.waiting.postMessage('SKIP_WAITING');
         }

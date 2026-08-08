@@ -45,8 +45,14 @@ export function usePwaStatus(): UsePwaStatusResult {
       });
     };
 
+    let reloaded = false;
     const onControllerChange = () => {
       // A new SW has taken over; reload so the user sees the latest code.
+      // Guard with a one-shot so duplicate events (some browsers fire
+      // controllerchange more than once per update) can't trigger a reload
+      // loop.
+      if (reloaded) return;
+      reloaded = true;
       window.location.reload();
     };
 
