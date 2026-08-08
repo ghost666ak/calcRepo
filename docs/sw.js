@@ -6,7 +6,7 @@
 //   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
 //   - "extended" — assets + cache the most recent navigation response for offline boot.
 
-const VERSION = 'calcrepo-v3';
+const VERSION = 'calcrepo-v4';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [

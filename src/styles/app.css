@@ -262,6 +262,13 @@
   justify-content: flex-end;
 }
 
+.scientific-view {
+  /* Tighter internal rhythm than the parent .app-shell__main gap — the memory
+     row + keypad read as one unit instead of two disconnected blocks. */
+  display: grid;
+  gap: var(--space-3);
+}
+
 .scientific-view__settings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -287,8 +294,11 @@
 
 .scientific-view__memory {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Match .keypad--scientific (6 cols desktop / 4 cols mobile) so the four
+     memory buttons line up with C, ⌫, (, ) below — no more width mismatch. */
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-2);
+  align-items: stretch;
 }
 
 .keypad--scientific {
@@ -1098,5 +1108,10 @@
   }
   .programmer-view__snapshots {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .scientific-view__memory {
+    /* Same 4-col grid the keypad collapses to on small screens — keeps the
+       four memory buttons aligned with C, ⌫, (, ) underneath. */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
