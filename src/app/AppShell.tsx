@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ModeTabs } from '../components/ModeTabs';
 import { SettingsDrawer } from '../components/SettingsDrawer';
 import { HistoryPanel } from '../components/HistoryPanel';
@@ -22,18 +22,36 @@ const ToolsView = lazy(() =>
 export function AppShell(): JSX.Element {
   const { initial, write } = useUrlParams();
   const [mode, setMode] = useState<CalculatorMode>(initial.mode ?? 'basic');
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(initial.settings ?? false);
-  const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history ?? false);
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(initial.settings);
+  const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history);
   const { preferences } = usePreferences();
   const { record } = useHistory();
 
+  // Track previous drawer state so opening a drawer pushes a history entry
+  // (so back button closes it) and closing just replaces in place.
+  const prevSettingsOpen = useRef(settingsOpen);
+  const prevHistoryOpen = useRef(historyOpen);
+  const isInitialMount = useRef(true);
+
   // Keep the URL in sync with local UI state (mode + drawers).
   useEffect(() => {
-    write({
+    if (isInitialMount.current) {
+      // First run only syncs refs to current state; URL is already correct.
+      isInitialMount.current = false;
+      prevSettingsOpen.current = settingsOpen;
+      prevHistoryOpen.current = historyOpen;
+      return;
+    }
+    const justOpenedSettings = settingsOpen && !prevSettingsOpen.current;
+    const justOpenedHistory = historyOpen && !prevHistoryOpen.current;
+    prevSettingsOpen.current = settingsOpen;
+    prevHistoryOpen.current = historyOpen;
+    const next: Partial<{ mode: CalculatorMode; settings: boolean; history: boolean }> = {
       mode,
-      settings: settingsOpen ? true : undefined,
-      history: historyOpen ? true : undefined,
-    });
+    };
+    if (settingsOpen) next.settings = true;
+    if (historyOpen) next.history = true;
+    write(next, { push: justOpenedSettings || justOpenedHistory });
   }, [mode, settingsOpen, historyOpen, write]);
 
   // React to back/forward navigation.
@@ -41,12 +59,12 @@ export function AppShell(): JSX.Element {
     const onUrl = (event: Event) => {
       const detail = (event as CustomEvent).detail as {
         mode?: CalculatorMode;
-        settings?: boolean;
-        history?: boolean;
+        settings: boolean;
+        history: boolean;
       };
       if (detail.mode) setMode(detail.mode);
-      if (typeof detail.settings === 'boolean') setSettingsOpen(detail.settings);
-      if (typeof detail.history === 'boolean') setHistoryOpen(detail.history);
+      setSettingsOpen(detail.settings);
+      setHistoryOpen(detail.history);
     };
     window.addEventListener('calcrepo:url', onUrl);
     return () => window.removeEventListener('calcrepo:url', onUrl);

@@ -14,23 +14,27 @@ describe('useUrlParams', () => {
   });
 
   it('returns no state for an empty search string', () => {
-    expect(readUrlState('')).toEqual({});
+    expect(readUrlState('')).toEqual({ settings: false, history: false });
   });
 
   it('parses a valid mode', () => {
-    expect(readUrlState('?mode=scientific')).toEqual({ mode: 'scientific' });
+    expect(readUrlState('?mode=scientific')).toEqual({
+      mode: 'scientific',
+      settings: false,
+      history: false,
+    });
   });
 
   it('ignores an invalid mode', () => {
-    expect(readUrlState('?mode=nope')).toEqual({});
+    expect(readUrlState('?mode=nope')).toEqual({ settings: false, history: false });
   });
 
   it('parses the settings drawer flag', () => {
-    expect(readUrlState('?settings=open')).toEqual({ settings: true });
+    expect(readUrlState('?settings=open')).toEqual({ settings: true, history: false });
   });
 
   it('treats settings=false as explicitly closed', () => {
-    expect(readUrlState('?settings=false')).toEqual({ settings: false });
+    expect(readUrlState('?settings=false')).toEqual({ settings: false, history: false });
   });
 
   it('parses combined params', () => {
@@ -42,6 +46,17 @@ describe('useUrlParams', () => {
   });
 
   it('handles a missing leading question mark', () => {
-    expect(readUrlState('mode=tools')).toEqual({ mode: 'tools' });
+    expect(readUrlState('mode=tools')).toEqual({
+      mode: 'tools',
+      settings: false,
+      history: false,
+    });
+  });
+
+  it('treats missing drawer params as closed (used by popstate)', () => {
+    // When the user navigates back, the URL drops ?settings=open; the
+    // listener should still know the drawer is now closed (not "unknown").
+    expect(readUrlState('?mode=basic').settings).toBe(false);
+    expect(readUrlState('?mode=basic').history).toBe(false);
   });
 });
