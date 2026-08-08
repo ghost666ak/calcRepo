@@ -10,10 +10,37 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./pwa/icon-192.png" />
-    <script type="module" crossorigin src="/calcRepo/assets/index-COSO-uZ2.js"></script>
-    <link rel="stylesheet" crossorigin href="/calcRepo/assets/index-gYWs_8GV.css">
+    <script type="module" crossorigin src="/calcRepo/assets/index-DR7AV3Ue.js"></script>
+    <link rel="stylesheet" crossorigin href="/calcRepo/assets/index-BrfxG8sL.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Apply the user's theme synchronously so first paint matches their
+      // preference and the body background doesn't flash light → dark.
+      // Mirrors the resolver in src/app/useTheme.ts.
+      (function () {
+        try {
+          var raw = window.localStorage.getItem('calcRepo.preferences.v1');
+          var pref = 'system';
+          if (raw) {
+            var m = /"theme"\s*:\s*"(light|dark|system)"/.exec(raw);
+            if (m) pref = m[1];
+          }
+          var resolved =
+            pref === 'light' || pref === 'dark'
+              ? pref
+              : window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.style.colorScheme = resolved;
+        } catch (_) {
+          // localStorage / matchMedia unavailable — fall through; React will
+          // set the attribute as soon as it boots.
+        }
+      })();
+    </script>
   </body>
 </html>
