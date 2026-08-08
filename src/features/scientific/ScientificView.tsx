@@ -103,49 +103,59 @@ export function ScientificView(): JSX.Element {
         <Button label="MR" value="MR" onPress={() => memoryRecall()} variant="action" />
         <Button label="MC" value="MC" onPress={() => memoryClear()} variant="action" />
       </div>
-      <div className="keypad keypad--scientific" role="group" aria-label="Scientific keypad">
-        <Button label="C" value="C" onPress={press} variant="action" />
-        <Button label="⌫" value="⌫" onPress={press} variant="action" />
-        <Button label="(" value="(" onPress={press} variant="operator" />
-        <Button label=")" value=")" onPress={press} variant="operator" />
-        <Button label="π" value="pi" onPress={press} variant="function" />
-        <Button label="e" value="e" onPress={press} variant="function" />
-        <Button label="%" value="%" onPress={press} variant="operator" />
-        <Button label="^" value="^" onPress={press} variant="operator" />
-        {functions.map((fn) => (
-          <Button
-            key={fn.name}
-            label={fn.label}
-            value={`${fn.name}(`}
-            onPress={press}
-            variant="function"
-          />
-        ))}
-        {(['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '!', '+'] as const).map((entry) => {
-          const variant = entry === '+' || entry === '−' || entry === '×' || entry === '÷'
-            ? 'operator'
-            : 'digit';
-          const value = entry === '×' ? '*' : entry === '÷' ? '/' : entry === '−' ? '-' : entry;
-          return (
+      {/*
+        Split the keypad into two grids so functions and digits never share a
+        row. With ~19 scientific functions in a 4-col grid, the last row of
+        functions has a stray empty cell — without this split, that cell gets
+        filled by "7" and the 4×4 digit block at the bottom breaks apart.
+      */}
+      <div className="scientific-view__keypad">
+        <div className="keypad keypad--scientific keypad--scientific-functions" role="group" aria-label="Scientific functions">
+          <Button label="C" value="C" onPress={press} variant="action" />
+          <Button label="⌫" value="⌫" onPress={press} variant="action" />
+          <Button label="(" value="(" onPress={press} variant="operator" />
+          <Button label=")" value=")" onPress={press} variant="operator" />
+          <Button label="π" value="pi" onPress={press} variant="function" />
+          <Button label="e" value="e" onPress={press} variant="function" />
+          <Button label="%" value="%" onPress={press} variant="operator" />
+          <Button label="^" value="^" onPress={press} variant="operator" />
+          {functions.map((fn) => (
             <Button
-              key={entry}
-              label={entry}
-              value={value}
+              key={fn.name}
+              label={fn.label}
+              value={`${fn.name}(`}
               onPress={press}
-              variant={variant}
+              variant="function"
             />
-          );
-        })}
-        <button
-          type="button"
-          className="key key--action key--equals"
-          data-value="="
-          data-testid="key-equals"
-          onClick={() => equals()}
-          aria-label="Equals"
-        >
-          =
-        </button>
+          ))}
+        </div>
+        <div className="keypad keypad--scientific keypad--scientific-digits" role="group" aria-label="Scientific digit keypad">
+          {(['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '!', '+'] as const).map((entry) => {
+            const variant = entry === '+' || entry === '−' || entry === '×' || entry === '÷'
+              ? 'operator'
+              : 'digit';
+            const value = entry === '×' ? '*' : entry === '÷' ? '/' : entry === '−' ? '-' : entry;
+            return (
+              <Button
+                key={entry}
+                label={entry}
+                value={value}
+                onPress={press}
+                variant={variant}
+              />
+            );
+          })}
+          <button
+            type="button"
+            className="key key--action key--equals"
+            data-value="="
+            data-testid="key-equals"
+            onClick={() => equals()}
+            aria-label="Equals"
+          >
+            =
+          </button>
+        </div>
       </div>
       {history.length > 0 && (
         <details className="history" data-testid="history">

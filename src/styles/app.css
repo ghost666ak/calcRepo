@@ -301,6 +301,21 @@
   align-items: stretch;
 }
 
+.scientific-view__keypad {
+  /* Stack the two keypad grids vertically; the function grid owns the
+     action row + π/e/%/^ + all scientific functions, and the digit grid
+     owns 7..+ plus = — keeping them in separate grids stops "7" from
+     sliding into a stray cell at the end of the function rows. */
+  display: grid;
+  gap: var(--space-3);
+}
+
+.keypad--scientific-functions,
+.keypad--scientific-digits {
+  /* Inherit column structure from .keypad--scientific via the cascade:
+     6 cols desktop, 4 cols via the @media(max-width:480px) .keypad rule. */
+}
+
 .keypad--scientific {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
