@@ -92,6 +92,35 @@ describe('scientific function library', () => {
   });
 });
 
+describe('scientific postfix factorial', () => {
+  it('computes 5!', () => {
+    expect(valueOf('5!', withOverrides())).toBe(120);
+  });
+
+  it('factorials a parenthesised expression', () => {
+    expect(valueOf('(2+3)!', withOverrides())).toBe(120);
+  });
+
+  it('rejects factorial on negative input', () => {
+    const result = evaluateScientific('(-1)!', withOverrides());
+    expect(result.ok).toBe(false);
+    // The scientific fact() helper returns a domain error; we accept either.
+    if (!result.ok) expect(['syntax', 'domain']).toContain(result.kind);
+  });
+
+  it('rejects factorial on non-integer input', () => {
+    const result = evaluateScientific('2.5!', withOverrides());
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(['syntax', 'domain']).toContain(result.kind);
+  });
+
+  it('rejects a stray "!" with a friendly message', () => {
+    const result = evaluateScientific('!', withOverrides());
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toMatch(/Stray "!"\./);
+  });
+});
+
 describe('scientific implicit multiplication + friendly errors', () => {
   it('treats a number followed by "(" as multiplication', () => {
     const result = evaluateScientific('88(2)', withOverrides());

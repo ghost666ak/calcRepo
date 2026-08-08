@@ -221,7 +221,21 @@ function parseUnary(
     consume(state);
     return parseUnary(state, options, depth + 1);
   }
-  return parsePrimary(state, options, depth);
+  let value = parsePrimary(state, options, depth);
+  if (!value.ok) return value;
+  // Postfix factorial: 5! = 5 × 4 × 3 × 2 × 1. 5!! would re-factorial the
+  // result — unusual but mathematically defined and cheap.
+  while (peek(state).kind === 'bang') {
+    consume(state);
+    const factFn = SCIENTIFIC_FUNCTIONS.fact;
+    if (!factFn) {
+      return syntax('Factorial is unavailable.', 'Reload the page or report this as a bug.', peek(state).position);
+    }
+    const fact = factFn.evaluate([value.ok ? value.value : NaN], options.angleUnit, options.precisionDigits);
+    if (!fact.ok) return fact;
+    value = fact;
+  }
+  return value;
 }
 
 function parsePrimary(
@@ -257,6 +271,9 @@ function parsePrimary(
   }
   if (token.kind === 'percent') {
     return syntax('Stray "%".', 'Put a number or ")" before the percent sign.', token.position);
+  }
+  if (token.kind === 'bang') {
+    return syntax('Stray "!".', 'Put a number or ")" before the factorial sign.', token.position);
   }
   if (token.kind === 'comma') {
     return syntax('Unexpected ",".', 'Commas separate arguments inside supported functions.', token.position);

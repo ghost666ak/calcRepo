@@ -99,6 +99,9 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
       case '%':
         kind = 'percent';
         break;
+      case '!':
+        kind = 'bang';
+        break;
       case '(':
         kind = 'lparen';
         break;
@@ -110,7 +113,7 @@ export function tokenize(input: string): readonly Token[] | { error: ParseError 
           error: {
             message: `Unexpected character "${ch}"`,
             position: i,
-            hint: 'Allowed: digits, decimal point, identifiers, + - * / ^ % ( ) ,',
+            hint: 'Allowed: digits, decimal point, identifiers, + - * / ^ % ! ( ) ,',
           },
         };
     }

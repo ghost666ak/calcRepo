@@ -8,6 +8,7 @@ export interface Token {
     | 'slash'
     | 'caret'
     | 'percent'
+    | 'bang'
     | 'lparen'
     | 'rparen'
     | 'comma'

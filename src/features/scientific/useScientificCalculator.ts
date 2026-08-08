@@ -113,12 +113,14 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
 
   const press = useCallback(
     (value: string) => {
-      if (/^[0-9.+\-*/^()%!,]$/.test(value) || /^[a-zA-Z]$/.test(value)) {
-        return appendText(value);
-      }
       if (value === '=') return equals();
       if (value === 'C') return clear();
       if (value === '⌫') return backspace();
+      // Anything else — single chars like "7" or "+", and multi-char
+      // scientific tokens like "sin(", "asin(", "log2(" — appends to the
+      // expression. The earlier single-char regex silently dropped the
+      // scientific tokens, leaving the function buttons as no-ops.
+      return appendText(value);
     },
     [appendText, equals, clear, backspace],
   );

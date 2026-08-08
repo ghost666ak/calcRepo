@@ -218,7 +218,29 @@ function parseUnary(
     consume(state);
     return parseUnary(state, options, depth + 1);
   }
-  return parsePrimary(state, options, depth);
+  let value = parsePrimary(state, options, depth);
+  if (!value.ok) return value;
+  // Postfix factorial: 5! = 5 × 4 × 3 × 2 × 1. Strict integer n in [0, 170].
+  while (peek(state).kind === 'bang') {
+    consume(state);
+    const n = value.ok ? value.value : NaN;
+    const fact = factorial(n);
+    if (!fact.ok) return fact;
+    value = fact;
+  }
+  return value;
+}
+
+function factorial(n: number): EvalResult<NumberValue> {
+  if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) {
+    return syntax('Factorial requires a non-negative integer.', 'Use n! only with integer n ≥ 0.');
+  }
+  if (n > 170) {
+    return syntax(`Factorial of ${n} exceeds the safe limit.`, 'Keep n! ≤ 170 to stay within finite precision.');
+  }
+  let result = 1;
+  for (let i = 2; i <= n; i += 1) result *= i;
+  return ok(result, formatNumber(result));
 }
 
 function parsePrimary(
@@ -251,6 +273,9 @@ function parsePrimary(
   }
   if (token.kind === 'percent') {
     return syntax('Stray "%".', 'Put a number or ")" before the percent sign.', token.position);
+  }
+  if (token.kind === 'bang') {
+    return syntax('Stray "!".', 'Put a number or ")" before the factorial sign.', token.position);
   }
   if (token.kind === 'comma') {
     return syntax('Unexpected ",".', 'Commas separate arguments inside supported functions.', token.position);

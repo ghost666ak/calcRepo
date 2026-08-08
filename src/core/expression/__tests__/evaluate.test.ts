@@ -62,6 +62,27 @@ describe('basic evaluator', () => {
     if (!result.ok) expect(result.kind).toBe('syntax');
   });
 
+  it('evaluates factorial as a postfix operator', () => {
+    const v = (expr: string): number => {
+      const r = evaluate(expr);
+      if (!r.ok) throw new Error(`Unexpected error: ${r.message}`);
+      return r.value;
+    };
+    expect(v('5!')).toBe(120);
+    expect(v('0!')).toBe(1);
+    expect(v('1!')).toBe(1);
+    expect(v('(2+3)!')).toBe(120);
+  });
+
+  it('rejects factorial on non-integer or negative values', () => {
+    const r1 = evaluate('5.5!');
+    expect(r1.ok).toBe(false);
+    if (!r1.ok) expect(r1.kind).toBe('syntax');
+    const r2 = evaluate('(-1)!');
+    expect(r2.ok).toBe(false);
+    if (!r2.ok) expect(r2.kind).toBe('syntax');
+  });
+
   it('formats numbers without FP noise', () => {
     const formatted = formatNumber(0.1 + 0.2);
     expect(formatted).toBe('0.3');
