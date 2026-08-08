@@ -125,10 +125,26 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
         <fieldset>
           <legend>{t('settings.language')}</legend>
           <label>
-            <input type="radio" name="language" value="en" checked={preferences.language === 'en'} readOnly />
+            <input
+              type="radio"
+              name="language"
+              value="en"
+              checked={preferences.language === 'en'}
+              onChange={() => update({ language: 'en' })}
+            />
             English
           </label>
-          <p className="settings-drawer__hint">More languages will land in a future release.</p>
+          <label>
+            <input
+              type="radio"
+              name="language"
+              value="hi"
+              checked={preferences.language === 'hi'}
+              onChange={() => update({ language: 'hi' })}
+            />
+            हिन्दी (Hindi)
+          </label>
+          <p className="settings-drawer__hint">More languages coming soon — contributions welcome.</p>
         </fieldset>
         <label>
           <input

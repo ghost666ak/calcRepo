@@ -201,18 +201,30 @@
 .mode-tabs ul {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin: 0;
-  padding: 0;
+  padding: 4px;
   list-style: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  width: fit-content;
+  max-width: 100%;
 }
 
 .mode-tabs__tab {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  background-color: var(--color-surface);
+  background-color: transparent;
   color: var(--color-fg);
+  cursor: pointer;
+  font: inherit;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.mode-tabs__tab:hover {
+  background-color: var(--color-surface-2);
 }
 
 .mode-tabs__tab.is-active {
@@ -243,9 +255,18 @@
   font-family: var(--font-mono);
   font-size: 0.95rem;
   color: var(--color-muted);
-  word-break: break-all;
   text-align: right;
   min-height: 1.25em;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  /* Let scroll feel deliberate rather than sudden — short expressions stay
+     pinned to the right edge as in most calculators. */
+  scroll-behavior: smooth;
+  /* Negative inline padding so the text hugs the right edge before scrolling. */
+  padding-inline: var(--space-2);
+  margin-inline: calc(var(--space-2) * -1);
 }
 
 .display__value {
@@ -257,7 +278,7 @@
 
 .display__error {
   margin: 0;
-  color: var(--color-danger);
+  color: var(--color-error);
   font-size: 0.85rem;
 }
 
@@ -279,17 +300,17 @@
 
 .display__expression-error {
   display: inline-block;
-  color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
-  border-bottom: 2px solid var(--color-danger);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 18%, transparent);
+  border-bottom: 2px solid var(--color-error);
   border-radius: 2px;
   padding: 0 1px;
   animation: display-error-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes display-error-pulse {
-  0%, 100% { background: color-mix(in srgb, var(--color-danger) 18%, transparent); }
-  50% { background: color-mix(in srgb, var(--color-danger) 32%, transparent); }
+  0%, 100% { background: color-mix(in srgb, var(--color-error) 18%, transparent); }
+  50% { background: color-mix(in srgb, var(--color-error) 32%, transparent); }
 }
 
 .basic-view__actions {
@@ -374,6 +395,25 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.basic-view__actions button:hover {
+  background-color: var(--color-surface-2);
+  border-color: var(--color-accent);
+}
+
+.basic-view__actions button:active {
+  transform: scale(0.97);
+}
+
+.basic-view__action--copied {
+  background-color: var(--color-success) !important;
+  color: white !important;
+  border-color: transparent !important;
 }
 
 .keypad {
@@ -389,6 +429,24 @@
   background-color: var(--color-surface);
   font-family: var(--font-mono);
   font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
+}
+
+.key:hover {
+  background-color: var(--color-surface-2);
+  border-color: var(--color-accent);
+}
+
+.key:active {
+  transform: scale(0.96);
+  background-color: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .key--operator {
@@ -397,10 +455,29 @@
   border-color: transparent;
 }
 
+.key--operator:hover {
+  /* Slightly darker accent on hover without losing visibility on the blue bg */
+  background-color: color-mix(in srgb, var(--color-accent) 80%, black);
+  border-color: transparent;
+}
+
+.key--operator:active {
+  background-color: color-mix(in srgb, var(--color-accent) 70%, black);
+}
+
 .key--action {
   background-color: var(--color-fg);
   color: var(--color-bg);
   border-color: transparent;
+}
+
+.key--action:hover {
+  background-color: color-mix(in srgb, var(--color-fg) 85%, transparent);
+  border-color: transparent;
+}
+
+.key--action:active {
+  background-color: color-mix(in srgb, var(--color-fg) 70%, transparent);
 }
 
 .key--equals {
@@ -409,6 +486,15 @@
   color: white;
   border-color: transparent;
   font-size: 1.4rem;
+}
+
+.key--equals:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 85%, black);
+  border-color: transparent;
+}
+
+.key--equals:active {
+  background-color: color-mix(in srgb, var(--color-accent) 70%, black);
 }
 
 .history {
@@ -646,20 +732,22 @@
 
 .settings-drawer__section {
   display: grid;
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .settings-drawer__section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .settings-drawer__section h3 {
-  margin: 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  margin: 0 0 var(--space-1);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-muted);
   font-weight: 700;

@@ -52,7 +52,9 @@ export interface Messages {
   };
   readonly actions: {
     readonly copy: string;
+    readonly copyDone: string;
     readonly repeat: string;
+    readonly repeatHint: string;
     readonly clear: string;
     readonly backspace: string;
     readonly save: string;
@@ -76,7 +78,9 @@ export interface Messages {
   };
 }
 
-const EN: Messages = {
+/** English bundle — exported separately so useTranslation can fall back
+ *  per-key when a partial translation is missing a string. */
+export const EN_MESSAGES: Messages = {
   app: {
     title: 'calcRepo',
     tagline: 'Static developer calculator',
@@ -125,7 +129,9 @@ const EN: Messages = {
   },
   actions: {
     copy: 'Copy',
-    repeat: 'Repeat (+)',
+    copyDone: 'Copied!',
+    repeat: 'Repeat last result',
+    repeatHint: 'Appends the previous result to the expression with "+"',
     clear: 'Clear',
     backspace: 'Backspace',
     save: 'Save',
@@ -149,10 +155,88 @@ const EN: Messages = {
   },
 };
 
+const HI: Messages = {
+  app: {
+    title: 'calcRepo',
+    tagline: 'स्टैटिक डेवलपर कैलकुलेटर',
+  },
+  modes: {
+    basic: 'बेसिक',
+    scientific: 'साइंटिफिक',
+    base: 'बेस',
+    programmer: 'प्रोग्रामर',
+    tools: 'टूल्स',
+  },
+  settings: {
+    title: 'सेटिंग्स',
+    close: 'बंद करें',
+    appearance: 'दिखावट',
+    theme: 'थीम',
+    language: 'भाषा',
+    reducedMotion: 'एनिमेशन कम करें',
+    offline: 'ऑफ़लाइन और कैश',
+    cacheLevel: 'कैश स्तर',
+    cacheLevelShell: 'केवल ऐप शेल — सबसे छोटा',
+    cacheLevelAssets: 'ऐप शेल + एसेट (अनुशंसित)',
+    cacheLevelExtended: 'विस्तारित — पिछला पेज भी कैश करें',
+    clearCache: 'कैश फ़ाइलें साफ़ करें',
+    cacheCleared: 'कैश फ़ाइलें साफ़ हो गईं।',
+    cacheSize: 'कैश आकार: {size}',
+    updates: 'ऐप अपडेट',
+    autoUpdate: 'अपडेट स्वतः लागू करें',
+    checkForUpdate: 'अपडेट जाँचें',
+    updateAvailable: 'नया संस्करण उपलब्ध है।',
+    applyUpdate: 'अभी लागू करें',
+    noUpdateAvailable: 'आप नवीनतम संस्करण पर हैं।',
+    privacy: 'गोपनीयता',
+    privacyNote: 'इतिहास और पसंदीदा इसी डिवाइस पर रहते हैं। कोई डेटा कहीं नहीं भेजा जाता।',
+    rememberHistory: 'गणना इतिहास ऑटो-सेव',
+    autoSaveHistoryHint: 'बंद होने पर, कैलकुलेटर के नीचे हर एंट्री पर Save बटन दबाकर रखें।',
+    maxEntries: 'अधिकतम एंट��रियाँ',
+    feedback: 'फ़ीडबैक',
+    errorUx: 'त्रुटि फ़ीडबैक स्तर',
+    errorUxVerbose: 'विस्तृत',
+    errorUxVerboseHint: 'संदेश + अक्षर हाइलाइट + कैरेट।',
+    errorUxHighlight: 'केवल हाइलाइट',
+    errorUxHighlightHint: 'गलत अक्षर रेखांकित; कोई संदेश नहीं।',
+    errorUxSilent: 'मौन',
+    errorUxSilentHint: 'शांति से ऑटो-सही; कोई संकेत नहीं।',
+  },
+  actions: {
+    copy: 'कॉपी',
+    copyDone: 'कॉपी हो गया!',
+    repeat: 'अंतिम परिणाम दोहराएँ',
+    repeatHint: 'पिछले परिणाम को अभिव्यक्ति में "+" से जोड़ता है',
+    clear: 'साफ़',
+    backspace: 'बैकस्पेस',
+    save: 'सेव',
+    remove: 'हटाएँ',
+  },
+  history: {
+    autoSaveOffNotice: 'ऑटो-सेव इतिहास बंद है। गणना रिकॉर्ड करने के लिए सेटिंग्स में इसे चालू करें।',
+    inlineAutoSaveHint: 'ऑटो-सेव बंद है — एंट्री रखने के लिए Save दबाएँ।',
+    saveEntry: 'इतिहास में सेव',
+    removeEntry: 'हटाएँ',
+  },
+  historyPanel: {
+    all: 'सभी',
+    pinnedOnly: 'केवल पिन किया हुआ',
+    clearUnpinned: 'अनपिन साफ़ करें',
+    empty: 'अभी कोई इतिहास नहीं।',
+    reuse: 'पुनः उपयोग',
+    pin: 'पिन',
+    unpin: 'अनपिन',
+    remove: 'हटाएँ',
+  },
+};
+
 const MESSAGES: Record<string, Messages> = {
-  en: EN,
+  en: EN_MESSAGES,
+  hi: HI,
 };
 
 export function getMessages(language: string): Messages {
-  return MESSAGES[language] ?? EN;
+  // Unknown languages — and partially translated ones — fall back to the
+  // English bundle. Per-key fallback happens inside useTranslation's lookup.
+  return MESSAGES[language] ?? EN_MESSAGES;
 }

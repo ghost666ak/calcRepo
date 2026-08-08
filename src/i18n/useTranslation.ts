@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { usePreferences } from '../state/preferences';
-import { getMessages, type Messages } from './messages';
+import { getMessages, EN_MESSAGES, type Messages } from './messages';
 
 export interface Translator {
   /** Look up a message by dotted path. Returns the string with substitutions applied. */
@@ -10,7 +10,9 @@ export interface Translator {
 
 /**
  * Lightweight i18n hook: resolves a translator for the user's preferred language.
- * Unknown languages fall back to English. Only English is bundled today.
+ * - Unknown languages fall back to the English bundle.
+ * - Missing keys in a partial translation (e.g. Hindi) fall back per-key to
+ *   English so a partially translated bundle still renders usefully.
  */
 export function useTranslation(): Translator {
   const { preferences } = usePreferences();
@@ -18,15 +20,13 @@ export function useTranslation(): Translator {
     const messages = getMessages(preferences.language);
     const lookup = (path: string): unknown => {
       const parts = path.split('.');
-      let node: unknown = messages;
-      for (const part of parts) {
-        if (node && typeof node === 'object' && part in (node as Record<string, unknown>)) {
-          node = (node as Record<string, unknown>)[part];
-        } else {
-          return path;
-        }
-      }
-      return node;
+      // Try the requested language first…
+      const fromMessages = traverse(messages, parts);
+      if (typeof fromMessages === 'string') return fromMessages;
+      // …then English so partially translated bundles still render.
+      const fromEnglish = traverse(EN_MESSAGES, parts);
+      if (typeof fromEnglish === 'string') return fromEnglish;
+      return path;
     };
     const t = (path: string, vars?: Record<string, string | number>): string => {
       const value = lookup(path);
@@ -38,4 +38,16 @@ export function useTranslation(): Translator {
     };
     return { t, messages };
   }, [preferences.language]);
+}
+
+function traverse(node: unknown, parts: readonly string[]): unknown {
+  let current: unknown = node;
+  for (const part of parts) {
+    if (current && typeof current === 'object' && part in (current as Record<string, unknown>)) {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+  return current;
 }

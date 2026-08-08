@@ -27,7 +27,7 @@ function isTheme(value: unknown): value is Theme {
 }
 
 function isLanguage(value: unknown): value is Language {
-  return value === 'en';
+  return value === 'en' || value === 'hi';
 }
 
 function isCacheLevel(value: unknown): value is CacheLevel {

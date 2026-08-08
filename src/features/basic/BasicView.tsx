@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Key } from '../../components/Key';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
 import { useBasicCalculator } from './useBasicCalculator';
@@ -47,6 +47,21 @@ export function BasicView({
   const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
 
+  // Transient "Copied!" feedback for the copy button — flips back after ~1.5s
+  // so the user gets confirmation without a permanent UI change.
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | null>(null);
+  const handleCopy = useCallback(async () => {
+    const ok = await copy();
+    if (!ok) return;
+    setCopied(true);
+    if (copyTimer.current !== null) window.clearTimeout(copyTimer.current);
+    copyTimer.current = window.setTimeout(() => setCopied(false), 1500);
+  }, [copy]);
+  useEffect(() => () => {
+    if (copyTimer.current !== null) window.clearTimeout(copyTimer.current);
+  }, []);
+
   useEffect(() => {
     if (!onHistoryChange) return;
     const entry = consumeLatestEntry();
@@ -76,11 +91,23 @@ export function BasicView({
         )}
       </div>
       <div className="basic-view__actions">
-        <button type="button" onClick={() => void copy()} data-testid="copy-button">
-          Copy
+        <button
+          type="button"
+          onClick={() => void handleCopy()}
+          data-testid="copy-button"
+          className={copied ? 'basic-view__action basic-view__action--copied' : 'basic-view__action'}
+          aria-live="polite"
+        >
+          {copied ? t('actions.copyDone') : t('actions.copy')}
         </button>
-        <button type="button" onClick={repeat} data-testid="repeat-button">
-          Repeat (+)
+        <button
+          type="button"
+          onClick={repeat}
+          data-testid="repeat-button"
+          className="basic-view__action"
+          title={t('actions.repeatHint')}
+        >
+          {t('actions.repeat')}
         </button>
       </div>
       <div className="keypad" role="group" aria-label="Basic keypad">

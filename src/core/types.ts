@@ -17,8 +17,9 @@ export type AngleUnit = 'DEG' | 'RAD' | 'GRAD';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-/** Available UI languages. Only English is shipped today; the schema is ready for more. */
-export type Language = 'en';
+/** Available UI languages. 'en' is fully translated; 'hi' is a partial translation
+ *  (covers the most-visible UI; falls back to English for missing keys). */
+export type Language = 'en' | 'hi';
 
 /**
  * Caching aggressiveness for the PWA service worker.
