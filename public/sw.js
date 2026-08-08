@@ -6,7 +6,7 @@
 //   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
 //   - "extended" — assets + cache the most recent navigation response for offline boot.
 
-const VERSION = 'calcrepo-v9';
+const VERSION = 'calcrepo-v10';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [
@@ -95,7 +95,25 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) return cached;
+      if (cached) {
+        // Stale-while-revalidate: serve cached immediately, refresh in the
+        // background. If the cached entry turns out to be stale (server has a
+        // newer hash that no longer exists), the background fetch will fail
+        // and we drop the bad entry on the next activation cycle.
+        fetch(request)
+          .then((response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const copy = response.clone();
+              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
+            } else if (response && response.status === 404) {
+              // Server doesn't have this hash anymore — evict the stale copy
+              // so we don't keep serving a broken bundle.
+              caches.open(STATIC_CACHE).then((cache) => cache.delete(request)).catch(() => undefined);
+            }
+          })
+          .catch(() => undefined);
+        return cached;
+      }
       return fetch(request)
         .then((response) => {
           if (!response || response.status !== 200 || response.type !== 'basic') return response;
@@ -103,7 +121,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy)).catch(() => undefined);
           return response;
         })
-        .catch(() => caches.match('./index.html')),
+        .catch(() => caches.match('./index.html'));
     }),
   );
 });

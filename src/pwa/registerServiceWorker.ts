@@ -54,6 +54,14 @@ export function registerServiceWorker(): void {
         postCacheLevel(registration);
         wireUpdateListener(registration);
 
+        // If a worker is already waiting (i.e. another tab fetched sw.js and
+        // triggered its install but the page that registered first never got
+        // told to activate it), kick it off here so this tab doesn't stay on
+        // the old bundle.
+        if (registration.waiting) {
+          registration.waiting.postMessage('SKIP_WAITING');
+        }
+
         // Ask the browser to re-check for an updated SW on every page load.
         // Without this the browser only checks in the background (and only
         // when the previous SW is more than 24h old), so a freshly-deployed
