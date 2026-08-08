@@ -7,6 +7,11 @@ export interface Messages {
   readonly app: {
     readonly title: string;
     readonly tagline: string;
+    readonly historyButton: string;
+    readonly settingsButton: string;
+  };
+  readonly nav: {
+    readonly modeTabsLabel: string;
   };
   readonly modes: {
     readonly basic: string;
@@ -14,6 +19,13 @@ export interface Messages {
     readonly base: string;
     readonly programmer: string;
     readonly tools: string;
+  };
+  readonly themes: {
+    readonly light: string;
+    readonly dark: string;
+    readonly system: string;
+    readonly hint: string;
+    readonly moreLanguages: string;
   };
   readonly settings: {
     readonly title: string;
@@ -60,6 +72,50 @@ export interface Messages {
     readonly save: string;
     readonly remove: string;
   };
+  readonly basic: {
+    readonly equals: string;
+    readonly hint: string;
+  };
+  readonly scientific: {
+    readonly angleUnit: string;
+    readonly angleUnitDeg: string;
+    readonly angleUnitRad: string;
+    readonly angleUnitGrad: string;
+    readonly precision: string;
+    readonly memoryLabel: string;
+    readonly memoryAdd: string;
+    readonly memorySubtract: string;
+    readonly memoryRecall: string;
+    readonly memoryClear: string;
+  };
+  readonly base: {
+    readonly title: string;
+    readonly fromBase: string;
+    readonly toBase: string;
+    readonly inputLabel: string;
+    readonly resultLabel: string;
+  };
+  readonly programmer: {
+    readonly title: string;
+    readonly byteCount: string;
+    readonly bitwise: string;
+    readonly shiftLeft: string;
+    readonly shiftRight: string;
+    readonly andOp: string;
+    readonly orOp: string;
+    readonly xorOp: string;
+    readonly notOp: string;
+  };
+  readonly tools: {
+    readonly title: string;
+    readonly placeholder: string;
+  };
+  readonly status: {
+    readonly ready: string;
+    readonly loadingProgrammer: string;
+    readonly loadingTools: string;
+    readonly calculatingCache: string;
+  };
   readonly history: {
     readonly autoSaveOffNotice: string;
     readonly inlineAutoSaveHint: string;
@@ -67,6 +123,7 @@ export interface Messages {
     readonly removeEntry: string;
   };
   readonly historyPanel: {
+    readonly title: string;
     readonly all: string;
     readonly pinnedOnly: string;
     readonly clearUnpinned: string;
@@ -84,6 +141,11 @@ export const EN_MESSAGES: Messages = {
   app: {
     title: 'calcRepo',
     tagline: 'Static developer calculator',
+    historyButton: 'History',
+    settingsButton: 'Settings',
+  },
+  nav: {
+    modeTabsLabel: 'Calculator mode tabs',
   },
   modes: {
     basic: 'Basic',
@@ -91,6 +153,13 @@ export const EN_MESSAGES: Messages = {
     base: 'Base',
     programmer: 'Programmer',
     tools: 'Tools',
+  },
+  themes: {
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System',
+    hint: 'Follows your operating system when set to System.',
+    moreLanguages: 'More languages coming soon — contributions welcome.',
   },
   settings: {
     title: 'Settings',
@@ -137,6 +206,50 @@ export const EN_MESSAGES: Messages = {
     save: 'Save',
     remove: 'Remove',
   },
+  basic: {
+    equals: '=',
+    hint: 'Type expressions like 12*(5+3), then press =. Use AC to reset, ⌫ to delete the last character.',
+  },
+  scientific: {
+    angleUnit: 'Angle unit',
+    angleUnitDeg: 'Degrees',
+    angleUnitRad: 'Radians',
+    angleUnitGrad: 'Gradians',
+    precision: 'Decimal precision',
+    memoryLabel: 'Memory',
+    memoryAdd: 'M+',
+    memorySubtract: 'M−',
+    memoryRecall: 'MR',
+    memoryClear: 'MC',
+  },
+  base: {
+    title: 'Base converter',
+    fromBase: 'From',
+    toBase: 'To',
+    inputLabel: 'Input',
+    resultLabel: 'Result',
+  },
+  programmer: {
+    title: 'Programmer',
+    byteCount: 'Bytes',
+    bitwise: 'Bitwise',
+    shiftLeft: '<<',
+    shiftRight: '>>',
+    andOp: 'AND',
+    orOp: 'OR',
+    xorOp: 'XOR',
+    notOp: 'NOT',
+  },
+  tools: {
+    title: 'Tools',
+    placeholder: 'Pick a tool',
+  },
+  status: {
+    ready: 'Ready',
+    loadingProgrammer: 'Loading programmer mode…',
+    loadingTools: 'Loading tools…',
+    calculatingCache: 'Calculating cache size…',
+  },
   history: {
     autoSaveOffNotice: 'Auto-save history is off. Enable it in settings to start recording calculations.',
     inlineAutoSaveHint: 'Auto-save is off — tap Save to keep an entry.',
@@ -144,6 +257,7 @@ export const EN_MESSAGES: Messages = {
     removeEntry: 'Discard',
   },
   historyPanel: {
+    title: 'History',
     all: 'All',
     pinnedOnly: 'Pinned only',
     clearUnpinned: 'Clear unpinned',
@@ -159,6 +273,11 @@ const HI: Messages = {
   app: {
     title: 'calcRepo',
     tagline: 'स्टैटिक डेवलपर कैलकुलेटर',
+    historyButton: 'इतिहास',
+    settingsButton: 'सेटिंग्स',
+  },
+  nav: {
+    modeTabsLabel: 'कैलकुलेटर मोड टैब',
   },
   modes: {
     basic: 'बेसिक',
@@ -166,6 +285,13 @@ const HI: Messages = {
     base: 'बेस',
     programmer: 'प्रोग्रामर',
     tools: 'टूल्स',
+  },
+  themes: {
+    light: 'लाइट',
+    dark: 'डार्क',
+    system: 'सिस्टम',
+    hint: 'System पर रहने पर ऑपरेटिंग सिस्टम का थीम फॉलो करता है।',
+    moreLanguages: 'और भाषाएँ जल्द आ रही हैं — योगदान का स्वागत है।',
   },
   settings: {
     title: 'सेटिंग्स',
@@ -192,7 +318,7 @@ const HI: Messages = {
     privacyNote: 'इतिहास और पसंदीदा इसी डिवाइस पर रहते हैं। कोई डेटा कहीं नहीं भेजा जाता।',
     rememberHistory: 'गणना इतिहास ऑटो-सेव',
     autoSaveHistoryHint: 'बंद होने पर, कैलकुलेटर के नीचे हर एंट्री पर Save बटन दबाकर रखें।',
-    maxEntries: 'अधिकतम एंट��रियाँ',
+    maxEntries: 'अधिकतम एंट्रियाँ',
     feedback: 'फ़ीडबैक',
     errorUx: 'त्रुटि फ़ीडबैक स्तर',
     errorUxVerbose: 'विस्तृत',
@@ -212,6 +338,50 @@ const HI: Messages = {
     save: 'सेव',
     remove: 'हटाएँ',
   },
+  basic: {
+    equals: '=',
+    hint: '12*(5+3) जैसी अभिव्यक्ति टाइप करें, फिर = दबाएँ। AC से रीसेट, ⌫ से आखिरी अक्षर हटाएँ।',
+  },
+  scientific: {
+    angleUnit: 'कोण इकाई',
+    angleUnitDeg: 'डिग्री',
+    angleUnitRad: 'रेडियन',
+    angleUnitGrad: 'ग्रेडियन',
+    precision: 'दशमलव सटीकता',
+    memoryLabel: 'मेमोरी',
+    memoryAdd: 'M+',
+    memorySubtract: 'M−',
+    memoryRecall: 'MR',
+    memoryClear: 'MC',
+  },
+  base: {
+    title: 'बेस कन्वर्टर',
+    fromBase: 'से',
+    toBase: 'में',
+    inputLabel: 'इनपुट',
+    resultLabel: 'परिणाम',
+  },
+  programmer: {
+    title: 'प्रोग्रामर',
+    byteCount: 'बाइट्स',
+    bitwise: 'बिटवाइज़',
+    shiftLeft: '<<',
+    shiftRight: '>>',
+    andOp: 'AND',
+    orOp: 'OR',
+    xorOp: 'XOR',
+    notOp: 'NOT',
+  },
+  tools: {
+    title: 'टूल्स',
+    placeholder: 'कोई टूल चुनें',
+  },
+  status: {
+    ready: 'तैयार',
+    loadingProgrammer: 'प्रोग्रामर मोड लोड हो रहा है…',
+    loadingTools: 'टूल्स लोड हो रहे हैं…',
+    calculatingCache: 'कैश आकार गिना जा रहा है…',
+  },
   history: {
     autoSaveOffNotice: 'ऑटो-सेव इतिहास बंद है। गणना रिकॉर्ड करने के लिए सेटिंग्स में इसे चालू करें।',
     inlineAutoSaveHint: 'ऑटो-सेव बंद है — एंट्री रखने के लिए Save दबाएँ।',
@@ -219,6 +389,7 @@ const HI: Messages = {
     removeEntry: 'हटाएँ',
   },
   historyPanel: {
+    title: 'इतिहास',
     all: 'सभी',
     pinnedOnly: 'केवल पिन किया हुआ',
     clearUnpinned: 'अनपिन साफ़ करें',

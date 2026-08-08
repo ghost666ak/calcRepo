@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { useHistory } from '../history';
+import type { ReactNode } from 'react';
+import { HistoryProvider, useHistory } from '../history';
+
+function withProvider(): {
+  Provider: ({ children }: { children: ReactNode }) => JSX.Element;
+} {
+  return {
+    Provider: ({ children }) => <HistoryProvider>{children}</HistoryProvider>,
+  };
+}
 
 describe('useHistory', () => {
   beforeEach(() => {
@@ -12,7 +21,8 @@ describe('useHistory', () => {
   });
 
   it('does not record entries when disabled', () => {
-    const { result } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => useHistory(), { wrapper: Provider });
     act(() => {
       result.current.record({ kind: 'expression', expression: '1+1', result: '2', mode: 'basic' });
     });
@@ -20,7 +30,8 @@ describe('useHistory', () => {
   });
 
   it('records entries when enabled and persists across remount', () => {
-    const { result, unmount } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result, unmount } = renderHook(() => useHistory(), { wrapper: Provider });
     act(() => {
       result.current.toggleEnabled();
     });
@@ -32,13 +43,14 @@ describe('useHistory', () => {
     expect(result.current.entries[0]?.expression).toBe('2+2');
     unmount();
 
-    const second = renderHook(() => useHistory());
+    const second = renderHook(() => useHistory(), { wrapper: Provider });
     expect(second.result.current.entries).toHaveLength(2);
     expect(second.result.current.settings.enabled).toBe(true);
   });
 
   it('pins and removes entries', () => {
-    const { result } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => useHistory(), { wrapper: Provider });
     act(() => {
       result.current.toggleEnabled();
     });
@@ -58,7 +70,8 @@ describe('useHistory', () => {
   });
 
   it('keeps pinned entries when clearing', () => {
-    const { result } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => useHistory(), { wrapper: Provider });
     act(() => {
       result.current.toggleEnabled();
     });
@@ -86,13 +99,15 @@ describe('useHistory', () => {
       }
       return null;
     });
-    const { result } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => useHistory(), { wrapper: Provider });
     expect(result.current.entries).toHaveLength(1);
     expect(result.current.entries[0]?.id).toBe('a');
   });
 
   it('clamps the max entries setting', () => {
-    const { result } = renderHook(() => useHistory());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => useHistory(), { wrapper: Provider });
     act(() => {
       result.current.setMaxEntries(5000);
     });

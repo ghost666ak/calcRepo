@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { renderWithProviders as render } from '../../src/test/renderWithProviders';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ScientificView } from '../../src/features/scientific/ScientificView';
 
@@ -10,7 +11,7 @@ describe('ScientificView interactions', () => {
   it('switches angle units and reflects them in calculations', async () => {
     const user = userEvent.setup();
     render(<ScientificView />);
-    await user.click(screen.getByRole('radio', { name: 'DEG' }));
+    await user.click(screen.getByRole('radio', { name: /Degrees/i }));
     await user.keyboard('sin(30)');
     await user.click(screen.getByTestId('key-equals'));
     expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');

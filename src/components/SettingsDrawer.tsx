@@ -118,9 +118,10 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
                 checked={preferences.theme === theme}
                 onChange={() => update({ theme })}
               />
-              {theme}
+              {t(`themes.${theme}` as const)}
             </label>
           ))}
+          <p className="settings-drawer__hint">{t('themes.hint')}</p>
         </fieldset>
         <fieldset>
           <legend>{t('settings.language')}</legend>
@@ -144,7 +145,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
             />
             हिन्दी (Hindi)
           </label>
-          <p className="settings-drawer__hint">More languages coming soon — contributions welcome.</p>
+          <p className="settings-drawer__hint">{t('themes.moreLanguages')}</p>
         </fieldset>
         <label>
           <input
@@ -175,7 +176,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
         </fieldset>
         <p className="settings-drawer__hint" data-testid="cache-stats">
           {cacheStats === null
-            ? 'Calculating cache size…'
+            ? t('status.calculatingCache')
             : t('settings.cacheSize', { size: `${cacheStats.entries} files · ${formatBytes(cacheStats.bytes)}` })}
         </p>
         <button type="button" onClick={() => void onClearCache()} data-testid="clear-cache">
@@ -204,7 +205,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
           disabled={checking}
           data-testid="check-for-update"
         >
-          {checking ? '…' : t('settings.checkForUpdate')}
+          {checking ? t('status.ready') : t('settings.checkForUpdate')}
         </button>
         {updateAvailable ? (
           <div className="settings-drawer__update" role="status" data-testid="update-available">

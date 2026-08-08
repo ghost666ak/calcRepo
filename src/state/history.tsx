@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
 export type HistoryKind = 'expression' | 'programmer';
 
@@ -114,7 +115,14 @@ function generateId(): string {
   return `h_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
-export function useHistory(): UseHistoryResult {
+/**
+ * Shared history state via Context so the SettingsDrawer's `toggleEnabled`
+ * call reaches the BasicView's `settings.enabled` read on the same render —
+ * otherwise they each have a private useState and the UI gets out of sync.
+ */
+const HistoryContext = createContext<UseHistoryResult | null>(null);
+
+export function HistoryProvider({ children }: { readonly children: ReactNode }): JSX.Element {
   const [settings, setSettings] = useState<HistorySettings>(() => readSettings());
   const [entries, setEntries] = useState<readonly HistoryEntry[]>(() => readEntries());
 
@@ -140,7 +148,12 @@ export function useHistory(): UseHistoryResult {
       if (!settings.enabled) return;
       const id = generateId();
       setEntries((current) => {
-        const trimmed = current.filter((existing) => existing.pinned || existing.expression !== entry.expression || existing.result !== entry.result);
+        const trimmed = current.filter(
+          (existing) =>
+            existing.pinned ||
+            existing.expression !== entry.expression ||
+            existing.result !== entry.result,
+        );
         const nextEntry: HistoryEntry = {
           ...entry,
           id,
@@ -151,7 +164,9 @@ export function useHistory(): UseHistoryResult {
         const overflow = combined.length - settings.maxEntries;
         if (overflow <= 0) return combined;
         const pinned = combined.filter((entry) => entry.pinned);
-        const recent = combined.filter((entry) => !entry.pinned).slice(0, settings.maxEntries - pinned.length);
+        const recent = combined
+          .filter((entry) => !entry.pinned)
+          .slice(0, settings.maxEntries - pinned.length);
         return [...pinned, ...recent];
       });
     },
@@ -166,7 +181,10 @@ export function useHistory(): UseHistoryResult {
       const id = generateId();
       setEntries((current) => {
         const trimmed = current.filter(
-          (existing) => existing.pinned || existing.expression !== entry.expression || existing.result !== entry.result,
+          (existing) =>
+            existing.pinned ||
+            existing.expression !== entry.expression ||
+            existing.result !== entry.result,
         );
         const nextEntry: HistoryEntry = {
           ...entry,
@@ -178,7 +196,9 @@ export function useHistory(): UseHistoryResult {
         const overflow = combined.length - settings.maxEntries;
         if (overflow <= 0) return combined;
         const pinned = combined.filter((entry) => entry.pinned);
-        const recent = combined.filter((entry) => !entry.pinned).slice(0, settings.maxEntries - pinned.length);
+        const recent = combined
+          .filter((entry) => !entry.pinned)
+          .slice(0, settings.maxEntries - pinned.length);
         return [...pinned, ...recent];
       });
     },
@@ -199,5 +219,19 @@ export function useHistory(): UseHistoryResult {
     setEntries((current) => current.filter((entry) => entry.id !== id));
   }, []);
 
-  return { settings, entries, toggleEnabled, setMaxEntries, record, forceRecord, clear, togglePin, remove };
+  return (
+    <HistoryContext.Provider
+      value={{ settings, entries, toggleEnabled, setMaxEntries, record, forceRecord, clear, togglePin, remove }}
+    >
+      {children}
+    </HistoryContext.Provider>
+  );
+}
+
+export function useHistory(): UseHistoryResult {
+  const ctx = useContext(HistoryContext);
+  if (!ctx) {
+    throw new Error('useHistory must be used inside <HistoryProvider>');
+  }
+  return ctx;
 }

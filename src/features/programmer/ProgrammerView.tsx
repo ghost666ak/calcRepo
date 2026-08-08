@@ -1,5 +1,6 @@
 import { useProgrammerCalculator, PROGRAMMER_WIDTHS } from './useProgrammerCalculator';
 import type { Signedness, WordWidth } from '../../core/programmer';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const BASE_LABELS: Record<number, string> = { 2: 'BIN', 8: 'OCT', 10: 'DEC', 16: 'HEX' };
 
@@ -41,11 +42,12 @@ export function ProgrammerView(): JSX.Element {
     insert,
     copy,
   } = useProgrammerCalculator();
+  const { t } = useTranslation();
 
   return (
-    <section className="programmer-view" aria-label="Programmer calculator">
+    <section className="programmer-view" aria-label={t('programmer.title')}>
       <header className="programmer-view__header">
-        <h2>Programmer calculator</h2>
+        <h2>{t('programmer.title')}</h2>
         <p>Mixed-base integer expressions with bitwise operators, configurable width, and signedness.</p>
       </header>
 

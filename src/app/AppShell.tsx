@@ -12,6 +12,7 @@ import type { BasicHistoryEntry } from '../features/basic/useBasicCalculator';
 import { lazy, Suspense } from 'react';
 import { useUrlParams } from './useUrlParams';
 import { useTheme } from './useTheme';
+import { useTranslation } from '../i18n/useTranslation';
 
 const ProgrammerView = lazy(() =>
   import('../features/programmer/ProgrammerView').then((m) => ({ default: m.ProgrammerView })),
@@ -27,6 +28,7 @@ export function AppShell(): JSX.Element {
   const [historyOpen, setHistoryOpen] = useState<boolean>(initial.history);
   const { preferences } = usePreferences();
   const { settings, record, forceRecord } = useHistory();
+  const { t } = useTranslation();
   useTheme(preferences.theme);
 
   // Track previous drawer state so opening a drawer pushes a history entry
@@ -99,26 +101,26 @@ export function AppShell(): JSX.Element {
   return (
     <div className="app-shell">
       <header className="app-shell__header">
-        <h1 className="app-shell__title">calcRepo</h1>
+        <h1 className="app-shell__title">{t('app.title')}</h1>
         <div className="app-shell__actions">
           <button
             type="button"
             className="app-shell__history"
-            aria-label="Open history"
+            aria-label={t('app.historyButton')}
             aria-expanded={historyOpen}
             onClick={() => setHistoryOpen((value) => !value)}
             data-testid="open-history"
           >
-            History
+            {t('app.historyButton')}
           </button>
           <button
             type="button"
             className="app-shell__settings"
-            aria-label="Open settings"
+            aria-label={t('app.settingsButton')}
             aria-expanded={settingsOpen}
             onClick={() => setSettingsOpen((value) => !value)}
           >
-            Settings
+            {t('app.settingsButton')}
           </button>
         </div>
       </header>
@@ -140,12 +142,12 @@ export function AppShell(): JSX.Element {
         )}
         {mode === 'base' && <BaseView />}
         {mode === 'programmer' && (
-          <Suspense fallback={<p role="status">Loading programmer mode…</p>}>
+          <Suspense fallback={<p role="status">{t('status.loadingProgrammer')}</p>}>
             <ProgrammerView />
           </Suspense>
         )}
         {mode === 'tools' && (
-          <Suspense fallback={<p role="status">Loading tools…</p>}>
+          <Suspense fallback={<p role="status">{t('status.loadingTools')}</p>}>
             <ToolsView />
           </Suspense>
         )}

@@ -1,4 +1,5 @@
 import type { CalculatorMode, ModeDescriptor } from '../core/modes';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   readonly modes: readonly ModeDescriptor[];
@@ -7,9 +8,10 @@ interface Props {
 }
 
 export function ModeTabs({ modes, value, onChange }: Props): JSX.Element {
+  const { t } = useTranslation();
   return (
-    <nav className="mode-tabs" aria-label="Calculator mode">
-      <ul role="tablist" aria-label="Calculator mode tabs">
+    <nav className="mode-tabs" aria-label={t('modes.basic')}>
+      <ul role="tablist" aria-label={t('nav.modeTabsLabel')}>
         {modes.map((mode) => {
           const selected = mode.id === value;
           return (
@@ -22,7 +24,7 @@ export function ModeTabs({ modes, value, onChange }: Props): JSX.Element {
                 className={`mode-tabs__tab${selected ? ' is-active' : ''}`}
                 onClick={() => onChange(mode.id)}
               >
-                {mode.label}
+                {t(`modes.${mode.id}` as const)}
               </button>
             </li>
           );

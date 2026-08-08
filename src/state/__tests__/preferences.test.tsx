@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { usePreferences } from '../preferences';
+import type { ReactNode } from 'react';
+import { PreferencesProvider, usePreferences } from '../preferences';
+
+function withProvider(): {
+  Provider: ({ children }: { children: ReactNode }) => JSX.Element;
+} {
+  // renderHook doesn't auto-wrap; provide a wrapper that mounts the provider
+  // around whatever hook the test wants to exercise.
+  return {
+    Provider: ({ children }) => <PreferencesProvider>{children}</PreferencesProvider>,
+  };
+}
 
 describe('usePreferences', () => {
   beforeEach(() => {
@@ -12,18 +23,20 @@ describe('usePreferences', () => {
   });
 
   it('defaults errorUx to "verbose"', () => {
-    const { result } = renderHook(() => usePreferences());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => usePreferences(), { wrapper: Provider });
     expect(result.current.preferences.errorUx).toBe('verbose');
   });
 
   it('updates errorUx and persists across remount', () => {
-    const { result, unmount } = renderHook(() => usePreferences());
+    const { Provider } = withProvider();
+    const { result, unmount } = renderHook(() => usePreferences(), { wrapper: Provider });
     act(() => {
       result.current.update({ errorUx: 'silent' });
     });
     expect(result.current.preferences.errorUx).toBe('silent');
     unmount();
-    const remount = renderHook(() => usePreferences());
+    const remount = renderHook(() => usePreferences(), { wrapper: Provider });
     expect(remount.result.current.preferences.errorUx).toBe('silent');
   });
 
@@ -32,17 +45,23 @@ describe('usePreferences', () => {
       'calcRepo.preferences.v1',
       JSON.stringify({ errorUx: 'bogus' }),
     );
-    const { result } = renderHook(() => usePreferences());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => usePreferences(), { wrapper: Provider });
     expect(result.current.preferences.errorUx).toBe('verbose');
   });
 
   it('accepts each of the three ErrorUx values', () => {
-    const { result } = renderHook(() => usePreferences());
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => usePreferences(), { wrapper: Provider });
     for (const value of ['highlight', 'silent', 'verbose'] as const) {
       act(() => {
         result.current.update({ errorUx: value });
       });
       expect(result.current.preferences.errorUx).toBe(value);
     }
+  });
+
+  it('throws when used outside the provider (so missing wrapping is loud)', () => {
+    expect(() => renderHook(() => usePreferences())).toThrow(/PreferencesProvider/);
   });
 });

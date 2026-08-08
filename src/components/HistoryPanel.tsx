@@ -15,9 +15,9 @@ export function HistoryPanel({ open, onClose, onSelect }: Props): JSX.Element | 
   if (!open) return null;
   const visible = filter === 'pinned' ? entries.filter((entry) => entry.pinned) : entries;
   return (
-    <aside className="history-panel" role="dialog" aria-modal="true" aria-label="History">
+    <aside className="history-panel" role="dialog" aria-modal="true" aria-label={t('historyPanel.title')}>
       <header>
-        <h2>History</h2>
+        <h2>{t('historyPanel.title')}</h2>
         <button type="button" onClick={onClose} aria-label={t('settings.close')}>
           {t('settings.close')}
         </button>

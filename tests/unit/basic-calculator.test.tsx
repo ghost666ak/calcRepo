@@ -1,4 +1,5 @@
-import { act, render, screen } from '@testing-library/react';
+import { renderWithProviders as render } from '../../src/test/renderWithProviders';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BasicView } from '../../src/features/basic/BasicView';
 

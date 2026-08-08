@@ -1,9 +1,11 @@
 import { PRESET_BASES, useBaseConverter } from './useBaseConverter';
 import { MAX_BASE, MIN_BASE } from '../../core/base';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const VARIANT_LABELS: Record<number, string> = { 2: 'BIN', 8: 'OCT', 10: 'DEC', 16: 'HEX' };
 
 export function BaseView(): JSX.Element {
+  const { t } = useTranslation();
   const {
     input,
     sourceBase,
@@ -25,9 +27,9 @@ export function BaseView(): JSX.Element {
   } = useBaseConverter();
 
   return (
-    <section className="base-view" aria-label="Base converter">
+    <section className="base-view" aria-label={t('base.title')}>
       <header className="base-view__header">
-        <h2>Base converter</h2>
+        <h2>{t('base.title')}</h2>
         <p>Convert between bases {MIN_BASE}–{MAX_BASE} with exact integer/fractional arithmetic.</p>
       </header>
 

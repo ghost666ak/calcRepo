@@ -69,7 +69,7 @@ export function BasicView({
   });
 
   return (
-    <section className="basic-view" aria-label="Basic calculator">
+    <section className="basic-view" aria-label={t('modes.basic')}>
       <div className="display" data-testid="display">
         <ExpressionDisplay
           expression={expression}
@@ -110,7 +110,7 @@ export function BasicView({
           {t('actions.repeat')}
         </button>
       </div>
-      <div className="keypad" role="group" aria-label="Basic keypad">
+      <div className="keypad" role="group" aria-label={t('modes.basic')}>
         {KEYS.map((key) => (
           <Key key={key.value} label={key.label} value={key.value} variant={key.variant} onPress={press} />
         ))}
@@ -120,14 +120,14 @@ export function BasicView({
           data-value="="
           data-testid="key-equals"
           onClick={() => press('=')}
-          aria-label="Equals"
+          aria-label={t('basic.equals')}
         >
           =
         </button>
       </div>
       {history.length > 0 && (
         <details className="history" data-testid="history">
-          <summary>History ({history.length})</summary>
+          <summary>{t('historyPanel.title')} ({history.length})</summary>
           {!autoSaveEnabled && onManualSave && (
             <p className="history__auto-save-hint">{t('history.inlineAutoSaveHint')}</p>
           )}

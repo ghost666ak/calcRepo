@@ -74,25 +74,34 @@ export function ScientificView({
   const functions = listScientificFunctions();
 
   return (
-    <section className="scientific-view" aria-label="Scientific calculator">
-      <div className="scientific-view__settings" role="group" aria-label="Scientific settings">
+    <section className="scientific-view" aria-label={t('modes.scientific')}>
+      <div className="scientific-view__settings" role="group" aria-label={t('modes.scientific')}>
         <fieldset>
-          <legend>Angle unit</legend>
-          {ANGLE_UNITS.map((unit) => (
-            <label key={unit}>
-              <input
-                type="radio"
-                name="angle-unit"
-                value={unit}
-                checked={angleUnit === unit}
-                onChange={() => setAngleUnit(unit as AngleUnit)}
-              />
-              {unit}
-            </label>
-          ))}
+          <legend>{t('scientific.angleUnit')}</legend>
+          {ANGLE_UNITS.map((unit) => {
+            // The AngleUnit enum is upper-case (DEG / RAD / GRAD) but the
+            // i18n keys are PascalCase (`angleUnitDeg`), so we have to
+            // normalise before looking up the translation.
+            const labelKey = `scientific.angleUnit${
+              unit.charAt(0).toUpperCase() + unit.slice(1).toLowerCase()
+            }` as const;
+            return (
+              <label key={unit}>
+                <input
+                  type="radio"
+                  name="angle-unit"
+                  value={unit}
+                  checked={angleUnit === unit}
+                  onChange={() => setAngleUnit(unit as AngleUnit)}
+                  aria-label={t(labelKey)}
+                />
+                {t(labelKey)}
+              </label>
+            );
+          })}
         </fieldset>
         <label>
-          Precision (0–64 digits): {precisionDigits}
+          {t('scientific.precision')} ({precisionDigits})
           <input
             type="range"
             min={0}
@@ -118,7 +127,7 @@ export function ScientificView({
             {error}
           </p>
         )}
-        <p className="display__memory" aria-live="polite">Memory: {memory}</p>
+        <p className="display__memory" aria-live="polite">{t('scientific.memoryLabel')}: {memory}</p>
       </div>
       <div className="scientific-view__memory" role="group" aria-label="Memory registers">
         <Button label="M+" value="M+" onPress={() => memoryAdd()} variant="action" />
@@ -174,7 +183,7 @@ export function ScientificView({
             data-value="="
             data-testid="key-equals"
             onClick={() => equals()}
-            aria-label="Equals"
+            aria-label={t('basic.equals')}
           >
             =
           </button>
@@ -182,7 +191,7 @@ export function ScientificView({
       </div>
       {history.length > 0 && (
         <details className="history" data-testid="history">
-          <summary>History ({history.length})</summary>
+          <summary>{t('historyPanel.title')} ({history.length})</summary>
           {!autoSaveEnabled && onManualSave && (
             <p className="history__auto-save-hint">{t('history.inlineAutoSaveHint')}</p>
           )}

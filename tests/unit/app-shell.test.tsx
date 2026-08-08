@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { renderWithProviders as render } from '../../src/test/renderWithProviders';
+import { screen } from '@testing-library/react';
 import { App } from '../../src/app/App';
 
 describe('App shell', () => {

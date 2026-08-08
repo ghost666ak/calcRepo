@@ -11,6 +11,7 @@ import {
   utf8Bytes,
   type ByteSizeResult,
 } from '../../core/tools';
+import { useTranslation } from '../../i18n/useTranslation';
 
 type ToolId = 'bits' | 'unicode' | 'ieee754' | 'bytes' | 'timestamp';
 
@@ -24,13 +25,14 @@ const TOOLS: readonly { id: ToolId; label: string; description: string }[] = [
 
 export function ToolsView(): JSX.Element {
   const [tool, setTool] = useState<ToolId>('bits');
+  const { t } = useTranslation();
   return (
-    <section className="tools-view" aria-label="Coding toolbox">
+    <section className="tools-view" aria-label={t('tools.title')}>
       <header className="tools-view__header">
-        <h2>Coding toolbox</h2>
+        <h2>{t('tools.title')}</h2>
         <p>Standalone utilities for common developer tasks.</p>
       </header>
-      <nav className="tools-view__tabs" aria-label="Tool selection">
+      <nav className="tools-view__tabs" aria-label={t('tools.placeholder')}>
         <ul role="tablist">
           {TOOLS.map((entry) => (
             <li key={entry.id} role="presentation">
