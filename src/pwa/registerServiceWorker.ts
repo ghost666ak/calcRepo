@@ -48,8 +48,13 @@ export function registerServiceWorker(): void {
 
   window.addEventListener('load', () => {
     const base = import.meta.env.BASE_URL || '/';
+    // Cache-bust the SW URL so the browser always re-checks for an updated
+    // worker. Without the query string, some browsers serve a cached sw.js
+    // even when registration.update() is called, leaving the user stuck on
+    // an old worker.
+    const swUrl = `${base}sw.js?v=${Date.now()}`;
     navigator.serviceWorker
-      .register(`${base}sw.js`, { scope: base })
+      .register(swUrl, { scope: base })
       .then((registration) => {
         postCacheLevel(registration);
         wireUpdateListener(registration);
