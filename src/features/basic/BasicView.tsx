@@ -12,6 +12,9 @@ interface Props {
    *  entry can be promoted into persistent history manually. */
   readonly autoSaveEnabled?: boolean;
   readonly onManualSave?: (entry: BasicHistoryEntry) => void;
+  /** When this prop's nonce changes, the expression is replaced — used by
+   *  History → Reuse to load a previous expression back into the keypad. */
+  readonly seedExpression?: { value: string; nonce: number } | null;
 }
 
 const KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'operator' | 'action' }> = [
@@ -41,11 +44,17 @@ export function BasicView({
   onHistoryChange,
   autoSaveEnabled = true,
   onManualSave,
+  seedExpression,
 }: Props = {}): JSX.Element {
-  const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry } = useBasicCalculator();
+  const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry, seedWith } = useBasicCalculator();
   const { preferences } = usePreferences();
   const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
+
+  // History → Reuse: when the seed prop's nonce changes, replace the expression.
+  useEffect(() => {
+    if (seedExpression) seedWith(seedExpression.value);
+  }, [seedExpression, seedWith]);
 
   // Transient "Copied!" feedback for the copy button — flips back after ~1.5s
   // so the user gets confirmation without a permanent UI change.

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_CONVERT_OPTIONS,
   formatFullRational,
@@ -92,6 +92,26 @@ export function useBaseConverter(): UseBaseConverterResult {
       return false;
     }
   }, [grouped]);
+
+  // Keyboard shortcuts for the swap + copy buttons so power users don't have
+  // to mouse to them. Esc swaps, Ctrl/Cmd+Enter copies. Skipped when the
+  // number inputs are focused so users can keep typing freely.
+  useEffect(() => {
+    const handler = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null;
+      const isEditable = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if (isEditable) return;
+      if (event.key === 'Escape') {
+        swap();
+        event.preventDefault();
+      } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        void copy();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [swap, copy]);
 
   return {
     input,

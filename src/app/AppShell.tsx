@@ -8,6 +8,7 @@ import { BaseView } from '../features/base/BaseView';
 import { AVAILABLE_MODES, type CalculatorMode } from '../core/modes';
 import { usePreferences } from '../state/preferences';
 import { useHistory } from '../state/history';
+import type { HistoryEntry } from '../state/history';
 import type { BasicHistoryEntry } from '../features/basic/useBasicCalculator';
 import { lazy, Suspense } from 'react';
 import { useUrlParams } from './useUrlParams';
@@ -98,6 +99,19 @@ export function AppShell(): JSX.Element {
     [forceRecord],
   );
 
+  // Seed the active calculator from a history entry. Only basic/scientific
+  // have an expression store to seed; base/programmer/tools are skipped
+  // because they never record expression entries.
+  const [seededExpression, setSeededExpression] = useState<{ value: string; nonce: number } | null>(null);
+  const handleReuse = useCallback((entry: HistoryEntry) => {
+    if (entry.kind !== 'expression') return;
+    if (entry.mode === 'basic' || entry.mode === 'scientific') {
+      setMode(entry.mode);
+      setSeededExpression({ value: entry.expression, nonce: Date.now() });
+      setHistoryOpen(false);
+    }
+  }, []);
+
   return (
     <div className="app-shell">
       <header className="app-shell__header">
@@ -131,6 +145,7 @@ export function AppShell(): JSX.Element {
             onHistoryChange={handleBasicHistory}
             autoSaveEnabled={settings.enabled}
             onManualSave={(entry) => handleManualSave(entry, 'basic')}
+            seedExpression={seededExpression}
           />
         )}
         {mode === 'scientific' && (
@@ -138,6 +153,7 @@ export function AppShell(): JSX.Element {
             onHistoryChange={handleScientificHistory}
             autoSaveEnabled={settings.enabled}
             onManualSave={(entry) => handleManualSave(entry, 'scientific')}
+            seedExpression={seededExpression}
           />
         )}
         {mode === 'base' && <BaseView />}
@@ -153,7 +169,7 @@ export function AppShell(): JSX.Element {
         )}
       </main>
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} onSelect={handleReuse} />
     </div>
   );
 }

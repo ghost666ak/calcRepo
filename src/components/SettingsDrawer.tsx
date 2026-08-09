@@ -133,7 +133,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
               checked={preferences.language === 'en'}
               onChange={() => update({ language: 'en' })}
             />
-            English
+            {t('languages.en')}
           </label>
           <label>
             <input
@@ -143,7 +143,7 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
               checked={preferences.language === 'hi'}
               onChange={() => update({ language: 'hi' })}
             />
-            हिन्दी (Hindi)
+            {t('languages.hi')}
           </label>
           <p className="settings-drawer__hint">{t('themes.moreLanguages')}</p>
         </fieldset>

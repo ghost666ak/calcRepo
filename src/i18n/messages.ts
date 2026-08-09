@@ -87,28 +87,88 @@ export interface Messages {
     readonly memorySubtract: string;
     readonly memoryRecall: string;
     readonly memoryClear: string;
+    readonly memoryGroupLabel: string;
+    readonly keypadFunctions: string;
+    readonly keypadDigits: string;
   };
   readonly base: {
     readonly title: string;
-    readonly fromBase: string;
-    readonly toBase: string;
+    readonly description: string;
     readonly inputLabel: string;
     readonly resultLabel: string;
+    readonly sourceBase: string;
+    readonly targetBase: string;
+    readonly sourceBasePresets: string;
+    readonly targetBasePresets: string;
+    readonly value: string;
+    readonly copy: string;
+    readonly swap: string;
+    readonly fractionDigits: string;
+    readonly digitsPerGroup: string;
+    readonly truncated: string;
+    readonly repeating: string;
   };
   readonly programmer: {
     readonly title: string;
-    readonly byteCount: string;
-    readonly bitwise: string;
-    readonly shiftLeft: string;
-    readonly shiftRight: string;
-    readonly andOp: string;
-    readonly orOp: string;
-    readonly xorOp: string;
-    readonly notOp: string;
+    readonly description: string;
+    readonly settings: string;
+    readonly keypad: string;
+    readonly expression: string;
+    readonly output: string;
+    readonly outputBase: string;
+    readonly outputCopyGroup: string;
+    readonly wordWidth: string;
+    readonly wordWidthBit: string;
+    readonly signedness: string;
+    readonly signed: string;
+    readonly unsigned: string;
+    readonly statusFlags: string;
+    readonly overflow: string;
+    readonly carry: string;
+    readonly invalidBits: string;
+    readonly raw: string;
+    readonly bin: string;
+    readonly oct: string;
+    readonly dec: string;
+    readonly hex: string;
   };
   readonly tools: {
     readonly title: string;
+    readonly description: string;
     readonly placeholder: string;
+    readonly tabsLabel: string;
+    readonly bitInspector: string;
+    readonly unicode: string;
+    readonly ieee754: string;
+    readonly bytes: string;
+    readonly timestamp: string;
+    readonly value: string;
+    readonly width: string;
+    readonly widthBit: string;
+    readonly msb: string;
+    readonly lsb: string;
+    readonly statusCopied: string;
+    readonly statusRoundTripOk: string;
+    readonly statusRoundTripFailed: string;
+    readonly statusInvalid: string;
+    readonly inputLabel: string;
+    readonly unit: string;
+    readonly unitSeconds: string;
+    readonly unitMillis: string;
+    readonly isoUtc: string;
+    readonly utc: string;
+    readonly local: string;
+    readonly epochSeconds: string;
+    readonly epochMillis: string;
+    readonly dayOfWeek: string;
+    readonly dayNumber: string;
+    readonly weekNumber: string;
+    readonly parsedIso: string;
+    readonly days: readonly [string, string, string, string, string, string, string];
+  };
+  readonly languages: {
+    readonly en: string;
+    readonly hi: string;
   };
   readonly status: {
     readonly ready: string;
@@ -121,6 +181,7 @@ export interface Messages {
     readonly inlineAutoSaveHint: string;
     readonly saveEntry: string;
     readonly removeEntry: string;
+    readonly createdAtFallback: string;
   };
   readonly historyPanel: {
     readonly title: string;
@@ -221,28 +282,88 @@ export const EN_MESSAGES: Messages = {
     memorySubtract: 'M−',
     memoryRecall: 'MR',
     memoryClear: 'MC',
+    memoryGroupLabel: 'Memory registers',
+    keypadFunctions: 'Scientific functions',
+    keypadDigits: 'Scientific digit keypad',
   },
   base: {
     title: 'Base converter',
-    fromBase: 'From',
-    toBase: 'To',
+    description: 'Convert between bases 2–36 with exact integer/fractional arithmetic.',
     inputLabel: 'Input',
     resultLabel: 'Result',
+    sourceBase: 'Source base',
+    targetBase: 'Target base',
+    sourceBasePresets: 'Source base presets',
+    targetBasePresets: 'Target base presets',
+    value: 'Value',
+    copy: 'Copy converted value',
+    swap: 'Swap source and target bases',
+    fractionDigits: 'Fraction digits (1–128): {value}',
+    digitsPerGroup: 'Digits per group (0–8): {value}',
+    truncated: 'Output truncated to the configured fraction digit limit.',
+    repeating: 'Repeating fraction shown in parentheses.',
   },
   programmer: {
     title: 'Programmer',
-    byteCount: 'Bytes',
-    bitwise: 'Bitwise',
-    shiftLeft: '<<',
-    shiftRight: '>>',
-    andOp: 'AND',
-    orOp: 'OR',
-    xorOp: 'XOR',
-    notOp: 'NOT',
+    description: 'Mixed-base integer expressions with bitwise operators, configurable width, and signedness.',
+    settings: 'Programmer settings',
+    keypad: 'Programmer keypad',
+    expression: 'Expression',
+    output: 'Output',
+    outputBase: 'Output base',
+    outputCopyGroup: 'Output copy',
+    wordWidth: 'Word width',
+    wordWidthBit: '{value}-bit',
+    signedness: 'Signedness',
+    signed: 'signed',
+    unsigned: 'unsigned',
+    statusFlags: 'Status flags',
+    overflow: 'overflow',
+    carry: 'carry',
+    invalidBits: 'invalid bits',
+    raw: 'raw',
+    bin: 'BIN',
+    oct: 'OCT',
+    dec: 'DEC',
+    hex: 'HEX',
   },
   tools: {
     title: 'Tools',
+    description: 'Standalone utilities for common developer tasks.',
     placeholder: 'Pick a tool',
+    tabsLabel: 'Tool tabs',
+    bitInspector: 'Bit inspector',
+    unicode: 'Unicode & UTF-8',
+    ieee754: 'IEEE-754',
+    bytes: 'Bytes',
+    timestamp: 'Timestamp',
+    value: 'Value',
+    width: 'Width',
+    widthBit: '{value}-bit',
+    msb: 'MSB',
+    lsb: 'LSB',
+    statusCopied: 'Copied',
+    statusRoundTripOk: 'Round-trip OK',
+    statusRoundTripFailed: 'Round-trip mismatch',
+    statusInvalid: 'Invalid input',
+    inputLabel: 'Input',
+    unit: 'Unit',
+    unitSeconds: 'Seconds',
+    unitMillis: 'Milliseconds',
+    isoUtc: 'ISO (UTC): {value}',
+    utc: 'UTC: {value}',
+    local: 'Local: {value}',
+    epochSeconds: 'Epoch seconds: {value}',
+    epochMillis: 'Epoch millis: {value}',
+    dayOfWeek: 'Day of week: {value}',
+    dayNumber: 'Day #{value}',
+    weekNumber: 'Week #{value}',
+    parsedIso: 'Parsed ISO: {value}',
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  },
+  languages: {
+    en: 'English',
+    hi: 'हिन्दी (Hindi)',
   },
   status: {
     ready: 'Ready',
@@ -255,6 +376,7 @@ export const EN_MESSAGES: Messages = {
     inlineAutoSaveHint: 'Auto-save is off — tap Save to keep an entry.',
     saveEntry: 'Save to history',
     removeEntry: 'Discard',
+    createdAtFallback: '(no date)',
   },
   historyPanel: {
     title: 'History',
@@ -353,28 +475,88 @@ const HI: Messages = {
     memorySubtract: 'M−',
     memoryRecall: 'MR',
     memoryClear: 'MC',
+    memoryGroupLabel: 'मेमोरी रजिस्टर',
+    keypadFunctions: 'साइंटिफिक फ़ंक्शन',
+    keypadDigits: 'साइंटिफिक अंक कीपैड',
   },
   base: {
     title: 'बेस कन्वर्टर',
-    fromBase: 'से',
-    toBase: 'में',
+    description: '2–36 के बीच बेस कन्वर्ट करें, सटीक पूर्णांक/भिन्न अंकगणित के साथ।',
     inputLabel: 'इनपुट',
     resultLabel: 'परिणाम',
+    sourceBase: 'स्रोत बेस',
+    targetBase: 'लक्ष्य बेस',
+    sourceBasePresets: 'स्रोत बेस प्रीसेट',
+    targetBasePresets: 'लक्ष्य बेस प्रीसेट',
+    value: 'मान',
+    copy: 'कन्वर्ट किया गया मान कॉपी करें',
+    swap: 'स्रोत और लक्ष्य बेस बदलें',
+    fractionDigits: 'भिन्न अंक (1–128): {value}',
+    digitsPerGroup: 'प्रति समूह अ��क (0–8): {value}',
+    truncated: 'आउटपुट भिन्न अंक सीमा तक ट्रंकेट किया गया।',
+    repeating: 'पुनरावृत्त भिन्न कोष्ठक में दिखाया गया।',
   },
   programmer: {
     title: 'प्रोग्रामर',
-    byteCount: 'बाइट्स',
-    bitwise: 'बिटवाइज़',
-    shiftLeft: '<<',
-    shiftRight: '>>',
-    andOp: 'AND',
-    orOp: 'OR',
-    xorOp: 'XOR',
-    notOp: 'NOT',
+    description: 'मिश्रित-बेस पूर्णांक अभिव्यक्तियाँ, बिटवाइज़ ऑपरेटर, कॉन्फ़िगरेबल चौड़ाई और साइन्डनेस।',
+    settings: 'प्रोग्रामर सेटिंग्स',
+    keypad: 'प्रोग्रामर कीपैड',
+    expression: 'अभिव्यक्ति',
+    output: 'आउटपुट',
+    outputBase: 'आउटपुट बेस',
+    outputCopyGroup: 'आउटपुट कॉपी',
+    wordWidth: 'शब्द चौड़ाई',
+    wordWidthBit: '{value}-बिट',
+    signedness: 'साइन्डनेस',
+    signed: 'साइन्ड',
+    unsigned: 'अनसाइन्ड',
+    statusFlags: 'स्थिति फ़्लैग',
+    overflow: 'ओवरफ़्लो',
+    carry: 'कैरी',
+    invalidBits: 'अमान्य बिट',
+    raw: 'रॉ',
+    bin: 'बिन',
+    oct: 'ऑक्ट',
+    dec: 'डेसि',
+    hex: 'हेक्स',
   },
   tools: {
     title: 'टूल्स',
+    description: 'सामान्य डेवलपर कार्यों के लिए स्टैंडअलोन उपयोगिताएँ।',
     placeholder: 'कोई टूल चुनें',
+    tabsLabel: 'टूल टैब',
+    bitInspector: 'बिट इंस्पेक्टर',
+    unicode: 'यूनिकोड और UTF-8',
+    ieee754: 'IEEE-754',
+    bytes: 'बाइट्स',
+    timestamp: 'टाइमस्टैम्प',
+    value: 'मान',
+    width: 'चौड़ाई',
+    widthBit: '{value}-बिट',
+    msb: 'MSB',
+    lsb: 'LSB',
+    statusCopied: 'कॉपी हो गया',
+    statusRoundTripOk: 'राउंड-ट्रिप ठीक',
+    statusRoundTripFailed: 'राउंड-ट्रिप बेमेल',
+    statusInvalid: 'अमान्य इनपुट',
+    inputLabel: 'इनपुट',
+    unit: 'इकाई',
+    unitSeconds: 'सेकंड',
+    unitMillis: 'मिलीसेकंड',
+    isoUtc: 'ISO (UTC): {value}',
+    utc: 'UTC: {value}',
+    local: 'स्थानीय: {value}',
+    epochSeconds: 'Epoch सेकंड: {value}',
+    epochMillis: 'Epoch मिलीसेकंड: {value}',
+    dayOfWeek: 'सप्ताह का दिन: {value}',
+    dayNumber: 'दिन #{value}',
+    weekNumber: 'सप्ताह #{value}',
+    parsedIso: 'पार्स किया ISO: {value}',
+    days: ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'],
+  },
+  languages: {
+    en: 'English',
+    hi: 'हिन्दी (Hindi)',
   },
   status: {
     ready: 'तैयार',
@@ -387,6 +569,7 @@ const HI: Messages = {
     inlineAutoSaveHint: 'ऑटो-सेव बंद है — एंट्री रखने के लिए Save दबाएँ।',
     saveEntry: 'इतिहास में सेव',
     removeEntry: 'हटाएँ',
+    createdAtFallback: '(कोई दिनांक नहीं)',
   },
   historyPanel: {
     title: 'इतिहास',

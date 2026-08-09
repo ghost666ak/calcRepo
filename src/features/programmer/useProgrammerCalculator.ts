@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   evaluateProgrammer,
   formatProgrammer,
@@ -37,14 +37,11 @@ export interface UseProgrammerCalculatorResult {
   readonly clear: () => void;
   readonly backspace: () => void;
   readonly insert: (value: string) => void;
-  readonly evaluate: () => void;
   readonly setOutputBase: (base: number) => void;
   readonly outputBase: number;
   readonly outputValue: string;
   readonly copy: () => Promise<boolean>;
 }
-
-const OUTPUT_BASES = [2, 8, 10, 16] as const;
 
 export function useProgrammerCalculator(): UseProgrammerCalculatorResult {
   const [expression, setExpression] = useState('');
@@ -98,10 +95,6 @@ export function useProgrammerCalculator(): UseProgrammerCalculatorResult {
     setExpression((current) => current + value);
   }, []);
 
-  const evaluate = useCallback(() => {
-    // state is already derived; the act of typing is the expression.
-  }, []);
-
   const copy = useCallback(async () => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return false;
     try {
@@ -111,6 +104,36 @@ export function useProgrammerCalculator(): UseProgrammerCalculatorResult {
       return false;
     }
   }, [outputValue]);
+
+  // Keyboard support: Escape clears, Ctrl/Cmd+Enter copies the result, the
+  // & | ^ ~ < > + - * / % keys route through `insert` when the input is not
+  // focused (so the textbox still works for free-form typing).
+  useEffect(() => {
+    const handler = (event: KeyboardEvent): void => {
+      if (event.metaKey || event.ctrlKey) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          void copy();
+        }
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      const isEditable = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if (isEditable) return;
+      if (event.key === 'Escape') {
+        clear();
+        event.preventDefault();
+      } else if (event.key === 'Backspace') {
+        backspace();
+        event.preventDefault();
+      } else if (event.key.length === 1 && /[&|^~+\-*/%()<>]/.test(event.key)) {
+        insert(event.key);
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [clear, backspace, insert, copy]);
 
   return {
     expression,
@@ -125,7 +148,6 @@ export function useProgrammerCalculator(): UseProgrammerCalculatorResult {
     clear,
     backspace,
     insert,
-    evaluate,
     setOutputBase,
     outputBase,
     outputValue,
@@ -141,5 +163,4 @@ function parseSingleDecimal(expression: string): bigint | null {
   return BigInt(numeric);
 }
 
-export const PROGRAMMER_BYTE_BASES = OUTPUT_BASES;
 export const PROGRAMMER_WIDTHS = WORD_WIDTHS;

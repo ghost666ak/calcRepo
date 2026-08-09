@@ -20,6 +20,8 @@ export interface UseBasicCalculatorResult {
   readonly repeat: () => void;
   readonly copy: () => Promise<boolean>;
   readonly consumeLatestEntry: () => BasicHistoryEntry | null;
+  /** Replace the current expression. Used by History → Reuse. */
+  readonly seedWith: (value: string) => void;
 }
 
 const MAX_HISTORY = 20;
@@ -41,6 +43,13 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     setDisplay('0');
     setError(null);
     setErrorPosition(null);
+  }, []);
+
+  const seedWith = useCallback((value: string) => {
+    setError(null);
+    setErrorPosition(null);
+    setExpression(value);
+    setDisplay(value.length === 0 ? '0' : value);
   }, []);
 
   const backspace = useCallback(() => {
@@ -205,8 +214,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   }, [press, equals, backspace, clear]);
 
   return useMemo(
-    () => ({ expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry }),
-    [expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry],
+    () => ({ expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith }),
+    [expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith],
   );
 }
 

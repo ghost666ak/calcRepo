@@ -29,6 +29,8 @@ export interface UseScientificCalculatorResult {
   readonly memorySubtract: () => void;
   readonly memoryRecall: () => void;
   readonly memoryClear: () => void;
+  /** Replace the current expression. Used by History → Reuse. */
+  readonly seedWith: (value: string) => void;
 }
 
 const MAX_HISTORY = 20;
@@ -51,6 +53,13 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setDisplay('0');
     setError(null);
     setErrorPosition(null);
+  }, []);
+
+  const seedWith = useCallback((value: string) => {
+    setError(null);
+    setErrorPosition(null);
+    setExpression(value);
+    setDisplay(value.length === 0 ? '0' : value);
   }, []);
 
   const backspace = useCallback(() => {
@@ -217,6 +226,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       memorySubtract,
       memoryRecall,
       memoryClear,
+      seedWith,
     }),
     [
       expression,
@@ -238,6 +248,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       memorySubtract,
       memoryRecall,
       memoryClear,
+      seedWith,
     ],
   );
 }

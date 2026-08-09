@@ -15,12 +15,37 @@ interface ButtonProps {
   readonly variant?: 'digit' | 'operator' | 'function' | 'action';
 }
 
+// The keypad renders display chars ("×", "÷", "−") but the evaluator expects
+// the ASCII tokens ("*", "/", "-"). Single source of truth — adding a new
+// glyph means adding one entry here, not editing the mapping later.
+const DIGIT_KEYS: ReadonlyArray<{ label: string; value: string; variant: 'digit' | 'operator' }> = [
+  { label: '7', value: '7', variant: 'digit' },
+  { label: '8', value: '8', variant: 'digit' },
+  { label: '9', value: '9', variant: 'digit' },
+  { label: '÷', value: '/', variant: 'operator' },
+  { label: '4', value: '4', variant: 'digit' },
+  { label: '5', value: '5', variant: 'digit' },
+  { label: '6', value: '6', variant: 'digit' },
+  { label: '×', value: '*', variant: 'operator' },
+  { label: '1', value: '1', variant: 'digit' },
+  { label: '2', value: '2', variant: 'digit' },
+  { label: '3', value: '3', variant: 'digit' },
+  { label: '−', value: '-', variant: 'operator' },
+  { label: '0', value: '0', variant: 'digit' },
+  { label: '.', value: '.', variant: 'digit' },
+  { label: '!', value: '!', variant: 'digit' },
+  { label: '+', value: '+', variant: 'operator' },
+];
+
 interface ScientificViewProps {
   readonly onHistoryChange?: (entry: ScientificHistoryEntry) => void;
   /** When auto-save is off, the caller passes a forceRecord so each inline
    *  entry can be promoted into persistent history manually. */
   readonly autoSaveEnabled?: boolean;
   readonly onManualSave?: (entry: ScientificHistoryEntry) => void;
+  /** When this prop's nonce changes, the expression is replaced — used by
+   *  History → Reuse to load a previous expression back into the keypad. */
+  readonly seedExpression?: { value: string; nonce: number } | null;
 }
 
 function Button({ label, value, onPress, variant = 'function' }: ButtonProps): JSX.Element {
@@ -41,6 +66,7 @@ export function ScientificView({
   onHistoryChange,
   autoSaveEnabled = true,
   onManualSave,
+  seedExpression,
 }: ScientificViewProps = {}): JSX.Element {
   const {
     expression,
@@ -60,10 +86,16 @@ export function ScientificView({
     memorySubtract,
     memoryRecall,
     memoryClear,
+    seedWith,
   } = useScientificCalculator();
   const { preferences } = usePreferences();
   const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
+
+  // History → Reuse: when the seed prop's nonce changes, replace the expression.
+  useEffect(() => {
+    if (seedExpression) seedWith(seedExpression.value);
+  }, [seedExpression, seedWith]);
 
   useEffect(() => {
     if (!onHistoryChange) return;
@@ -129,11 +161,11 @@ export function ScientificView({
         )}
         <p className="display__memory" aria-live="polite">{t('scientific.memoryLabel')}: {memory}</p>
       </div>
-      <div className="scientific-view__memory" role="group" aria-label="Memory registers">
-        <Button label="M+" value="M+" onPress={() => memoryAdd()} variant="action" />
-        <Button label="M−" value="M-" onPress={() => memorySubtract()} variant="action" />
-        <Button label="MR" value="MR" onPress={() => memoryRecall()} variant="action" />
-        <Button label="MC" value="MC" onPress={() => memoryClear()} variant="action" />
+      <div className="scientific-view__memory" role="group" aria-label={t('scientific.memoryGroupLabel')}>
+        <Button label={t('scientific.memoryAdd')} value="M+" onPress={() => memoryAdd()} variant="action" />
+        <Button label={t('scientific.memorySubtract')} value="M-" onPress={() => memorySubtract()} variant="action" />
+        <Button label={t('scientific.memoryRecall')} value="MR" onPress={() => memoryRecall()} variant="action" />
+        <Button label={t('scientific.memoryClear')} value="MC" onPress={() => memoryClear()} variant="action" />
       </div>
       {/*
         Split the keypad into two grids so functions and digits never share a
@@ -142,7 +174,7 @@ export function ScientificView({
         filled by "7" and the 4×4 digit block at the bottom breaks apart.
       */}
       <div className="scientific-view__keypad">
-        <div className="keypad keypad--scientific keypad--scientific-functions" role="group" aria-label="Scientific functions">
+        <div className="keypad keypad--scientific keypad--scientific-functions" role="group" aria-label={t('scientific.keypadFunctions')}>
           <Button label="C" value="C" onPress={press} variant="action" />
           <Button label="⌫" value="⌫" onPress={press} variant="action" />
           <Button label="(" value="(" onPress={press} variant="operator" />
@@ -161,22 +193,16 @@ export function ScientificView({
             />
           ))}
         </div>
-        <div className="keypad keypad--scientific keypad--scientific-digits" role="group" aria-label="Scientific digit keypad">
-          {(['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '!', '+'] as const).map((entry) => {
-            const variant = entry === '+' || entry === '−' || entry === '×' || entry === '÷'
-              ? 'operator'
-              : 'digit';
-            const value = entry === '×' ? '*' : entry === '÷' ? '/' : entry === '−' ? '-' : entry;
-            return (
-              <Button
-                key={entry}
-                label={entry}
-                value={value}
-                onPress={press}
-                variant={variant}
-              />
-            );
-          })}
+        <div className="keypad keypad--scientific keypad--scientific-digits" role="group" aria-label={t('scientific.keypadDigits')}>
+          {DIGIT_KEYS.map((entry) => (
+            <Button
+              key={entry.label}
+              label={entry.label}
+              value={entry.value}
+              onPress={press}
+              variant={entry.variant}
+            />
+          ))}
           <button
             type="button"
             className="key key--action key--equals"

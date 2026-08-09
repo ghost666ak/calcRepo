@@ -5,7 +5,12 @@ export interface TimestampResult {
   readonly iso: string;
   readonly utc: string;
   readonly local: string;
-  readonly dayOfWeek: string;
+  /**
+   * Zero-indexed day of week (0 = Sunday, 6 = Saturday) using UTC. The view
+   * layer translates this with the user's preferred language, so the core
+   * stays free of UI strings.
+   */
+  readonly dayOfWeekIndex: number;
   readonly dayOfYear: number;
   readonly weekOfYear: number;
 }
@@ -19,8 +24,6 @@ export type TimestampError = {
   readonly message: string;
   readonly hint: string;
 };
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function fromUnix(input: string, unit: 'seconds' | 'millis'): TimestampResult | TimestampFailure {
   const trimmed = input.trim();
@@ -58,10 +61,13 @@ export function toIso(millis: number): string {
 function buildResult(millis: number): TimestampResult {
   const date = new Date(millis);
   const seconds = Math.floor(millis / 1000);
-  const dayOfWeek = DAYS[date.getUTCDay()] ?? '?';
+  const dayOfWeekIndex = date.getUTCDay();
   const startOfYear = Date.UTC(date.getUTCFullYear(), 0, 0);
   const dayOfYear = Math.floor((millis - startOfYear) / 86_400_000);
-  const weekOfYear = Math.ceil(((dayOfYear + 1) / 7));
+  // dayOfYear is 0 for Jan 1, 6 for Jan 7, 7 for Jan 8 → weeks 1..N.
+  // ISO 8601 week numbering is more nuanced (depends on first Thursday),
+  // but for a friendly "Week #N" label we use the simple 7-day division.
+  const weekOfYear = Math.floor(dayOfYear / 7) + 1;
   return {
     ok: true,
     epochSeconds: seconds,
@@ -69,8 +75,8 @@ function buildResult(millis: number): TimestampResult {
     iso: date.toISOString(),
     utc: date.toUTCString(),
     local: date.toString(),
-    dayOfWeek,
-    dayOfYear,
+    dayOfWeekIndex,
+    dayOfYear: dayOfYear + 1,
     weekOfYear,
   };
 }

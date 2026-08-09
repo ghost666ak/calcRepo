@@ -30,12 +30,12 @@ export function BaseView(): JSX.Element {
     <section className="base-view" aria-label={t('base.title')}>
       <header className="base-view__header">
         <h2>{t('base.title')}</h2>
-        <p>Convert between bases {MIN_BASE}–{MAX_BASE} with exact integer/fractional arithmetic.</p>
+        <p>{t('base.description')}</p>
       </header>
 
       <div className="base-view__grid">
         <label className="base-view__field">
-          <span>Value</span>
+          <span>{t('base.value')}</span>
           <input
             type="text"
             inputMode="text"
@@ -43,13 +43,13 @@ export function BaseView(): JSX.Element {
             autoComplete="off"
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            aria-label="Value to convert"
+            aria-label={t('base.value')}
             data-testid="base-input"
           />
         </label>
 
         <label className="base-view__field">
-          <span>Source base</span>
+          <span>{t('base.sourceBase')}</span>
           <input
             type="number"
             min={MIN_BASE}
@@ -57,12 +57,12 @@ export function BaseView(): JSX.Element {
             step={1}
             value={sourceBase}
             onChange={(event) => setSourceBase(Number(event.target.value))}
-            aria-label="Source base"
+            aria-label={t('base.sourceBase')}
             data-testid="base-source"
           />
         </label>
 
-        <div className="base-view__presets" role="group" aria-label="Source base presets">
+        <div className="base-view__presets" role="group" aria-label={t('base.sourceBasePresets')}>
           {PRESET_BASES.map((base) => (
             <button
               key={base}
@@ -80,23 +80,23 @@ export function BaseView(): JSX.Element {
           type="button"
           className="key key--action"
           onClick={() => void copy()}
-          aria-label="Copy converted value"
+          aria-label={t('base.copy')}
           data-testid="base-copy"
         >
-          Copy
+          {t('actions.copy')}
         </button>
         <button
           type="button"
           className="key key--action"
           onClick={swap}
-          aria-label="Swap source and target bases"
+          aria-label={t('base.swap')}
           data-testid="base-swap"
         >
-          ⇄ Swap
+          ⇄ {t('base.swap')}
         </button>
 
         <label className="base-view__field">
-          <span>Target base</span>
+          <span>{t('base.targetBase')}</span>
           <input
             type="number"
             min={MIN_BASE}
@@ -104,12 +104,12 @@ export function BaseView(): JSX.Element {
             step={1}
             value={targetBase}
             onChange={(event) => setTargetBase(Number(event.target.value))}
-            aria-label="Target base"
+            aria-label={t('base.targetBase')}
             data-testid="base-target"
           />
         </label>
 
-        <div className="base-view__presets" role="group" aria-label="Target base presets">
+        <div className="base-view__presets" role="group" aria-label={t('base.targetBasePresets')}>
           {PRESET_BASES.map((base) => (
             <button
               key={base}
@@ -124,7 +124,7 @@ export function BaseView(): JSX.Element {
         </div>
 
         <label className="base-view__field">
-          <span>Fraction digits (1–128): {maxFractionDigits}</span>
+          <span>{t('base.fractionDigits', { value: maxFractionDigits })}</span>
           <input
             type="range"
             min={1}
@@ -132,13 +132,13 @@ export function BaseView(): JSX.Element {
             step={1}
             value={maxFractionDigits}
             onChange={(event) => setSourceMaxFractionDigits(Number(event.target.value))}
-            aria-label="Maximum fraction digits"
+            aria-label={t('base.fractionDigits', { value: maxFractionDigits })}
             data-testid="base-fraction-digits"
           />
         </label>
 
         <label className="base-view__field">
-          <span>Digits per group (0–8): {groupSize}</span>
+          <span>{t('base.digitsPerGroup', { value: groupSize })}</span>
           <input
             type="range"
             min={0}
@@ -146,14 +146,14 @@ export function BaseView(): JSX.Element {
             step={1}
             value={groupSize}
             onChange={(event) => setTargetGroupSize(Number(event.target.value))}
-            aria-label="Digits per group"
+            aria-label={t('base.digitsPerGroup', { value: groupSize })}
             data-testid="base-group-size"
           />
         </label>
       </div>
 
       <div className="base-view__output" data-testid="base-output">
-        <span className="display__label">Result</span>
+        <span className="display__label">{t('base.resultLabel')}</span>
         <output className="display__value" aria-live="polite">
           {output}
         </output>
@@ -166,10 +166,10 @@ export function BaseView(): JSX.Element {
           <p className="display__hint">{hint}</p>
         )}
         {truncated && (
-          <p className="display__hint" data-testid="base-truncated">Output truncated to the configured fraction digit limit.</p>
+          <p className="display__hint" data-testid="base-truncated">{t('base.truncated')}</p>
         )}
         {repeating && (
-          <p className="display__hint" data-testid="base-repeating">Repeating fraction shown in parentheses.</p>
+          <p className="display__hint" data-testid="base-repeating">{t('base.repeating')}</p>
         )}
       </div>
     </section>
