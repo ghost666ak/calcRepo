@@ -3,6 +3,8 @@ import {
   DEFAULT_CONVERT_OPTIONS,
   formatFullRational,
   groupDigits,
+  MAX_BASE,
+  MIN_BASE,
   parseBaseLiteral,
   type ConvertOptions,
 } from '../../core/base';
@@ -11,6 +13,14 @@ export interface UseBaseConverterResult {
   readonly input: string;
   readonly sourceBase: number;
   readonly targetBase: number;
+  /** Raw text in the source base input. Reflects the user's typing even when
+   *  the value is currently invalid (out of range, decimal, etc.). */
+  readonly sourceBaseDraft: string;
+  readonly targetBaseDraft: string;
+  /** null when the draft is empty or a valid integer in [MIN_BASE, MAX_BASE];
+   *  a short human-readable message otherwise. */
+  readonly sourceBaseError: string | null;
+  readonly targetBaseError: string | null;
   readonly sourceOptions: ConvertOptions;
   readonly targetOptions: ConvertOptions;
   readonly maxFractionDigits: number;
@@ -21,8 +31,8 @@ export interface UseBaseConverterResult {
   readonly error: string | null;
   readonly hint: string | null;
   readonly setInput: (value: string) => void;
-  readonly setSourceBase: (base: number) => void;
-  readonly setTargetBase: (base: number) => void;
+  readonly setSourceBase: (value: string) => void;
+  readonly setTargetBase: (value: string) => void;
   readonly setSourceMaxFractionDigits: (value: number) => void;
   readonly setTargetGroupSize: (value: number) => void;
   readonly swap: () => void;
@@ -32,13 +42,31 @@ export interface UseBaseConverterResult {
 export const PRESET_BASES = [2, 8, 10, 16] as const;
 
 function isValidBase(value: number): boolean {
-  return Number.isInteger(value) && value >= 2 && value <= 36;
+  return Number.isInteger(value) && value >= MIN_BASE && value <= MAX_BASE;
+}
+
+/** Parse the user's raw text. Returns `null` for empty (so the field shows
+ *  "no error"), the parsed integer when it's in range, or a flag indicating
+ *  the value is invalid (out of range / not an integer). */
+function parseBaseDraft(
+  text: string,
+): { kind: 'empty' } | { kind: 'valid'; value: number } | { kind: 'invalid' } {
+  if (text === '') return { kind: 'empty' };
+  // Reject anything that isn't a non-negative integer string — defends
+  // against "2.5", " 4", "0x4", "-2", leading zeros like "02" being treated
+  // as ambiguous, and stray characters.
+  if (!/^[0-9]+$/.test(text)) return { kind: 'invalid' };
+  const n = Number(text);
+  if (!isValidBase(n)) return { kind: 'invalid' };
+  return { kind: 'valid', value: n };
 }
 
 export function useBaseConverter(): UseBaseConverterResult {
   const [input, setInput] = useState('0');
   const [sourceBase, setSourceBase] = useState<number>(10);
   const [targetBase, setTargetBase] = useState<number>(16);
+  const [sourceBaseDraft, setSourceBaseDraft] = useState('10');
+  const [targetBaseDraft, setTargetBaseDraft] = useState('16');
   const [sourceMaxFractionDigits, setSourceMaxFractionDigits] = useState<number>(64);
   const [targetGroupSize, setTargetGroupSize] = useState<number>(4);
 
@@ -50,6 +78,31 @@ export function useBaseConverter(): UseBaseConverterResult {
     () => ({ ...DEFAULT_CONVERT_OPTIONS, groupDigits: targetGroupSize }),
     [targetGroupSize],
   );
+
+  // Derive errors from the drafts. Empty is treated as "no input yet" (no
+  // error); non-integer or out-of-range gets the same message so the user
+  // sees a single consistent hint.
+  const sourceBaseError = useMemo<string | null>(() => {
+    const parsed = parseBaseDraft(sourceBaseDraft);
+    if (parsed.kind !== 'invalid') return null;
+    return `Base must be an integer from ${MIN_BASE} to ${MAX_BASE}.`;
+  }, [sourceBaseDraft]);
+  const targetBaseError = useMemo<string | null>(() => {
+    const parsed = parseBaseDraft(targetBaseDraft);
+    if (parsed.kind !== 'invalid') return null;
+    return `Base must be an integer from ${MIN_BASE} to ${MAX_BASE}.`;
+  }, [targetBaseDraft]);
+
+  // When the user types a valid value, commit it. When the draft is invalid
+  // or empty, keep the previous valid value so conversion still works.
+  useEffect(() => {
+    const parsed = parseBaseDraft(sourceBaseDraft);
+    if (parsed.kind === 'valid') setSourceBase(parsed.value);
+  }, [sourceBaseDraft]);
+  useEffect(() => {
+    const parsed = parseBaseDraft(targetBaseDraft);
+    if (parsed.kind === 'valid') setTargetBase(parsed.value);
+  }, [targetBaseDraft]);
 
   const parsed = useMemo(() => parseBaseLiteral(input, sourceBase), [input, sourceBase]);
 
@@ -81,6 +134,9 @@ export function useBaseConverter(): UseBaseConverterResult {
     setInput(converted);
     setSourceBase(targetBase);
     setTargetBase(sourceBase);
+    // Reset the drafts to the new numeric state so the inputs stay in sync.
+    setSourceBaseDraft(String(targetBase));
+    setTargetBaseDraft(String(sourceBase));
   }, [converted, sourceBase, targetBase]);
 
   const copy = useCallback(async () => {
@@ -117,6 +173,10 @@ export function useBaseConverter(): UseBaseConverterResult {
     input,
     sourceBase,
     targetBase,
+    sourceBaseDraft,
+    targetBaseDraft,
+    sourceBaseError,
+    targetBaseError,
     sourceOptions,
     targetOptions,
     maxFractionDigits: sourceMaxFractionDigits,
@@ -127,11 +187,15 @@ export function useBaseConverter(): UseBaseConverterResult {
     error,
     hint,
     setInput,
-    setSourceBase: (base: number) => {
-      if (isValidBase(base)) setSourceBase(base);
+    setSourceBase: (value: string) => {
+      setSourceBaseDraft(value);
+      // For the preset buttons, also clear any error by setting the draft
+      // directly to the canonical string representation.
+      if (isValidBase(Number(value))) setSourceBaseDraft(String(Number(value)));
     },
-    setTargetBase: (base: number) => {
-      if (isValidBase(base)) setTargetBase(base);
+    setTargetBase: (value: string) => {
+      setTargetBaseDraft(value);
+      if (isValidBase(Number(value))) setTargetBaseDraft(String(Number(value)));
     },
     setSourceMaxFractionDigits,
     setTargetGroupSize,

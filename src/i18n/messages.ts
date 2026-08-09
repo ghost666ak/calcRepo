@@ -61,6 +61,8 @@ export interface Messages {
     readonly errorUxHighlightHint: string;
     readonly errorUxSilent: string;
     readonly errorUxSilentHint: string;
+    readonly clearAfterEquals: string;
+    readonly clearAfterEqualsHint: string;
   };
   readonly actions: {
     readonly copy: string;
@@ -107,6 +109,7 @@ export interface Messages {
     readonly digitsPerGroup: string;
     readonly truncated: string;
     readonly repeating: string;
+    readonly outOfRange: string;
   };
   readonly programmer: {
     readonly title: string;
@@ -256,6 +259,8 @@ export const EN_MESSAGES: Messages = {
     errorUxHighlightHint: 'Underline the bad character; no message text.',
     errorUxSilent: 'Silent',
     errorUxSilentHint: 'Auto-correct quietly; no on-screen indicator.',
+    clearAfterEquals: 'Clear after equals',
+    clearAfterEqualsHint: 'Start a new calculation when a digit is pressed after =.',
   },
   actions: {
     copy: 'Copy',
@@ -302,6 +307,7 @@ export const EN_MESSAGES: Messages = {
     digitsPerGroup: 'Digits per group (0–8): {value}',
     truncated: 'Output truncated to the configured fraction digit limit.',
     repeating: 'Repeating fraction shown in parentheses.',
+    outOfRange: 'Base must be an integer from {min} to {max}.',
   },
   programmer: {
     title: 'Programmer',
@@ -449,6 +455,8 @@ const HI: Messages = {
     errorUxHighlightHint: 'गलत अक्षर रेखांकित; कोई संदेश नहीं।',
     errorUxSilent: 'मौन',
     errorUxSilentHint: 'शांति से ऑटो-सही; कोई संकेत नहीं।',
+    clearAfterEquals: 'के बाद साफ़ करें =',
+    clearAfterEqualsHint: '= के बाद अंक दबाने पर नई गणना शुरू करें।',
   },
   actions: {
     copy: 'कॉपी',
@@ -495,6 +503,7 @@ const HI: Messages = {
     digitsPerGroup: 'प्रति समूह अ��क (0–8): {value}',
     truncated: 'आउटपुट भिन्न अंक सीमा तक ट्रंकेट किया गया।',
     repeating: 'पुनरावृत्त भिन्न कोष्ठक में दिखाया गया।',
+    outOfRange: 'आधार {min} से {max} के बीच एक पूर्णांक होना चाहिए।',
   },
   programmer: {
     title: 'प्रोग्रामर',

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { evaluate } from '../../core/expression';
 import { autoCorrectParens } from '../../core/expression/autoCorrect';
+import { usePreferences } from '../../state/preferences';
 
 export interface BasicHistoryEntry {
   readonly expression: string;
@@ -37,12 +38,19 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastExpression, setLastExpression] = useState<string | null>(null);
   const [latestEntry, setLatestEntry] = useState<BasicHistoryEntry | null>(null);
+  const { preferences } = usePreferences();
+  // Tracks whether the last action was a successful (or auto-corrected) equals.
+  // When set, the next digit/decimal press resets the expression if the user
+  // has opted into "Clear after equals". Operators intentionally ignore this
+  // so pressing + after = still appends to the expression.
+  const wasJustEvaluated = useRef(false);
 
   const clear = useCallback(() => {
     setExpression('');
     setDisplay('0');
     setError(null);
     setErrorPosition(null);
+    wasJustEvaluated.current = false;
   }, []);
 
   const seedWith = useCallback((value: string) => {
@@ -65,16 +73,22 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const pressDigit = useCallback((digit: string) => {
     setError(null);
     setErrorPosition(null);
+    const shouldReset = wasJustEvaluated.current && preferences.clearAfterEquals;
+    if (shouldReset) wasJustEvaluated.current = false;
     setExpression((current) => {
-      const next = appendDigit(current, digit);
+      const base = shouldReset ? '' : current;
+      const next = appendDigit(base, digit);
       setDisplay(next.length === 0 ? digit : next);
       return next;
     });
-  }, []);
+  }, [preferences.clearAfterEquals]);
 
   const pressOperator = useCallback((op: string) => {
     setError(null);
     setErrorPosition(null);
+    // Operators don't trigger the post-equals reset — pressing + after =
+    // still appends to the existing expression.
+    wasJustEvaluated.current = false;
     setExpression((current) => {
       const next = appendOperator(current, op);
       setDisplay(next);
@@ -85,12 +99,15 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const pressDecimal = useCallback(() => {
     setError(null);
     setErrorPosition(null);
+    const shouldReset = wasJustEvaluated.current && preferences.clearAfterEquals;
+    if (shouldReset) wasJustEvaluated.current = false;
     setExpression((current) => {
-      const next = appendDecimal(current);
+      const base = shouldReset ? '' : current;
+      const next = appendDecimal(base);
       setDisplay(next === '0' ? '0.' : next);
       return next;
     });
-  }, []);
+  }, [preferences.clearAfterEquals]);
 
   const equals = useCallback(() => {
     setExpression((current) => {
@@ -104,7 +121,10 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
           return [entry, ...prev].slice(0, MAX_HISTORY);
         });
         setLatestEntry({ expression: current, result: result.formatted });
-        // Keep the question visible — only the answer moves to the big display.
+        // Mark "we just evaluated" so the next digit/decimal can reset if
+        // the user has opted in. The visible expression stays put so the
+        // question remains on screen — only the answer moves to the big display.
+        wasJustEvaluated.current = true;
         return current;
       }
       // Attempt a safe auto-correction (e.g. "(2+3" → "(2+3)").
@@ -123,12 +143,15 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         setLatestEntry({ expression: corrected.correctedFrom, result: corrected.formatted });
         setError(`${result.message} (auto-fixed: ${corrected.note})`);
         setErrorPosition(result.position ?? null);
-        // Update the expression so the user sees the corrected form (e.g. "(2+3").
+        // Auto-correct counts as an evaluation — the next digit/decimal should
+        // also reset if the preference is on.
+        wasJustEvaluated.current = true;
         return corrected.correctedFrom;
       }
       setError(result.message);
       setErrorPosition(result.position ?? null);
       setDisplay('Error');
+      wasJustEvaluated.current = false;
       return current;
     });
   }, []);
@@ -240,7 +263,13 @@ function appendOperator(current: string, op: string): string {
   if (current === '') return '';
   const lastChar = current[current.length - 1] ?? '';
   if (lastChar === '.') return current;
-  if (OPERATORS.has(lastChar) && lastChar !== ')') {
+  // Collapse the trailing operator into the new one only when BOTH tokens are
+  // binary operators — typing `2++` should yield `2+`, but `2-(` must stay
+  // `2-(` so the user can build `2 - (3+5)`. Parens always append: dropping
+  // the operator on `2×(` was how implicit multiplication worked before, but
+  // it silently lost the user's `-`/`+` when grouping after a subtraction.
+  const BINARY_OPS = new Set(['+', '-', '*', '/', '^', '%']);
+  if (BINARY_OPS.has(lastChar) && BINARY_OPS.has(op)) {
     return current.slice(0, -1) + op;
   }
   return current + op;

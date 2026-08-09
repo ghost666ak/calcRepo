@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { BasicView } from '../../src/features/basic/BasicView';
 
 describe('BasicView interactions', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it('computes 2 + 3 * 4 with correct precedence', async () => {
     const user = userEvent.setup();
     render(<BasicView />);
@@ -43,6 +47,67 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '−' }));
     expect(screen.getByTestId('display-expression')).toHaveTextContent('7−');
+  });
+
+  it('starts a fresh calculation when a digit is pressed after = (default)', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    // The post-= digit resets; "5" should now be a fresh "5", not "2+35".
+    await user.click(screen.getByRole('button', { name: '5' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('5');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+  });
+
+  it('starts a fresh calculation when a decimal is pressed after = (default)', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    await user.click(screen.getByRole('button', { name: '.' }));
+    await user.click(screen.getByRole('button', { name: '5' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('.5');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');
+  });
+
+  it('keeps appending when clearAfterEquals is off', async () => {
+    // Opt out of the new behaviour via storage so the hook reads the preference on mount.
+    window.localStorage.setItem(
+      'calcRepo.preferences.v1',
+      JSON.stringify({ clearAfterEquals: false }),
+    );
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    // Legacy behaviour: the next digit appends to the old expression.
+    await user.click(screen.getByRole('button', { name: '5' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('2+35');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('37');
+  });
+
+  it('preserves the trailing operator when "(" is typed next', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '−' }));
+    await user.click(screen.getByRole('button', { name: '(' }));
+    await user.keyboard('3+5)');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('-6');
   });
 
   it('repeats the last result by adding it to itself', async () => {

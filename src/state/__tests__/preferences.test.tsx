@@ -40,6 +40,16 @@ describe('usePreferences', () => {
     expect(remount.result.current.preferences.errorUx).toBe('silent');
   });
 
+  it('falls back to clearAfterEquals=true when stored value is invalid', () => {
+    window.localStorage.setItem(
+      'calcRepo.preferences.v1',
+      JSON.stringify({ clearAfterEquals: 'not-a-bool' }),
+    );
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => usePreferences(), { wrapper: Provider });
+    expect(result.current.preferences.clearAfterEquals).toBe(true);
+  });
+
   it('falls back to "verbose" when stored value is invalid', () => {
     window.localStorage.setItem(
       'calcRepo.preferences.v1',
@@ -63,5 +73,23 @@ describe('usePreferences', () => {
 
   it('throws when used outside the provider (so missing wrapping is loud)', () => {
     expect(() => renderHook(() => usePreferences())).toThrow(/PreferencesProvider/);
+  });
+
+  it('defaults clearAfterEquals to true', () => {
+    const { Provider } = withProvider();
+    const { result } = renderHook(() => usePreferences(), { wrapper: Provider });
+    expect(result.current.preferences.clearAfterEquals).toBe(true);
+  });
+
+  it('updates clearAfterEquals and persists across remount', () => {
+    const { Provider } = withProvider();
+    const { result, unmount } = renderHook(() => usePreferences(), { wrapper: Provider });
+    act(() => {
+      result.current.update({ clearAfterEquals: false });
+    });
+    expect(result.current.preferences.clearAfterEquals).toBe(false);
+    unmount();
+    const remount = renderHook(() => usePreferences(), { wrapper: Provider });
+    expect(remount.result.current.preferences.clearAfterEquals).toBe(false);
   });
 });

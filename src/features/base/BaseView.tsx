@@ -10,6 +10,10 @@ export function BaseView(): JSX.Element {
     input,
     sourceBase,
     targetBase,
+    sourceBaseDraft,
+    targetBaseDraft,
+    sourceBaseError,
+    targetBaseError,
     output,
     truncated,
     repeating,
@@ -48,19 +52,28 @@ export function BaseView(): JSX.Element {
           />
         </label>
 
-        <label className="base-view__field">
-          <span>{t('base.sourceBase')}</span>
+        <div className="base-view__field">
+          <span className="base-view__field-label">
+            {t('base.sourceBase')} ({MIN_BASE}–{MAX_BASE})
+          </span>
           <input
-            type="number"
-            min={MIN_BASE}
-            max={MAX_BASE}
-            step={1}
-            value={sourceBase}
-            onChange={(event) => setSourceBase(Number(event.target.value))}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            spellCheck={false}
+            autoComplete="off"
+            value={sourceBaseDraft}
+            onChange={(event) => setSourceBase(event.target.value)}
             aria-label={t('base.sourceBase')}
+            aria-invalid={sourceBaseError !== null}
             data-testid="base-source"
           />
-        </label>
+          {sourceBaseError && (
+            <p className="base-view__error" data-testid="base-source-error">
+              {t('base.outOfRange', { min: MIN_BASE, max: MAX_BASE })}
+            </p>
+          )}
+        </div>
 
         <div className="base-view__presets" role="group" aria-label={t('base.sourceBasePresets')}>
           {PRESET_BASES.map((base) => (
@@ -68,7 +81,7 @@ export function BaseView(): JSX.Element {
               key={base}
               type="button"
               className={`key ${sourceBase === base ? 'key--active' : ''}`}
-              onClick={() => setSourceBase(base)}
+              onClick={() => setSourceBase(String(base))}
               aria-pressed={sourceBase === base}
             >
               {VARIANT_LABELS[base] ?? base}
@@ -95,19 +108,28 @@ export function BaseView(): JSX.Element {
           ⇄ {t('base.swap')}
         </button>
 
-        <label className="base-view__field">
-          <span>{t('base.targetBase')}</span>
+        <div className="base-view__field">
+          <span className="base-view__field-label">
+            {t('base.targetBase')} ({MIN_BASE}–{MAX_BASE})
+          </span>
           <input
-            type="number"
-            min={MIN_BASE}
-            max={MAX_BASE}
-            step={1}
-            value={targetBase}
-            onChange={(event) => setTargetBase(Number(event.target.value))}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            spellCheck={false}
+            autoComplete="off"
+            value={targetBaseDraft}
+            onChange={(event) => setTargetBase(event.target.value)}
             aria-label={t('base.targetBase')}
+            aria-invalid={targetBaseError !== null}
             data-testid="base-target"
           />
-        </label>
+          {targetBaseError && (
+            <p className="base-view__error" data-testid="base-target-error">
+              {t('base.outOfRange', { min: MIN_BASE, max: MAX_BASE })}
+            </p>
+          )}
+        </div>
 
         <div className="base-view__presets" role="group" aria-label={t('base.targetBasePresets')}>
           {PRESET_BASES.map((base) => (
@@ -115,7 +137,7 @@ export function BaseView(): JSX.Element {
               key={base}
               type="button"
               className={`key ${targetBase === base ? 'key--active' : ''}`}
-              onClick={() => setTargetBase(base)}
+              onClick={() => setTargetBase(String(base))}
               aria-pressed={targetBase === base}
             >
               {VARIANT_LABELS[base] ?? base}

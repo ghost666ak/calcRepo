@@ -90,6 +90,28 @@ describe('scientific function library', () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.formatted).toBe('1.4142');
   });
+
+  it('trims trailing zeros so integer results display without decimals', () => {
+    // 6 * 1 = 6, but the formatter pads to 12 decimals; the trim step strips
+    // them so the user sees "6" instead of "6.000000000000".
+    const result = evaluateScientific('6*1', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.formatted).toBe('6');
+  });
+
+  it('keeps only meaningful digits after the decimal', () => {
+    // 5 + 0.5 = 5.5 — the value really has only one fractional digit, so trim
+    // is a no-op and the display stays "5.5".
+    const result = evaluateScientific('5+0.5', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.formatted).toBe('5.5');
+  });
+
+  it('preserves a leading minus when trimming', () => {
+    const result = evaluateScientific('0-5', withOverrides());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.formatted).toBe('-5');
+  });
 });
 
 describe('scientific postfix factorial', () => {

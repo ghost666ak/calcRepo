@@ -49,4 +49,10 @@ export interface Preferences {
   readonly pwaAutoUpdate: boolean;
   readonly cacheLevel: CacheLevel;
   readonly errorUx: ErrorUx;
+  /**
+   * Whether typing a digit or decimal after a successful `=` starts a fresh
+   * calculation (true, default) or appends to the previous expression (false,
+   * matches the legacy Windows-calculator behaviour).
+   */
+  readonly clearAfterEquals: boolean;
 }

@@ -13,6 +13,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   pwaAutoUpdate: true,
   cacheLevel: 'assets',
   errorUx: 'verbose',
+  clearAfterEquals: true,
 };
 
 function isAngleUnit(value: unknown): value is AngleUnit {
@@ -56,6 +57,7 @@ function readFromStorage(): Preferences {
       pwaAutoUpdate: parsed.pwaAutoUpdate === undefined ? true : Boolean(parsed.pwaAutoUpdate),
       cacheLevel: isCacheLevel(parsed.cacheLevel) ? parsed.cacheLevel : 'assets',
       errorUx: isErrorUx(parsed.errorUx) ? parsed.errorUx : 'verbose',
+      clearAfterEquals: parsed.clearAfterEquals === undefined ? true : Boolean(parsed.clearAfterEquals),
     };
   } catch {
     return DEFAULT_PREFERENCES;
@@ -113,6 +115,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps): JSX
           pwaAutoUpdate: parsed.pwaAutoUpdate === undefined ? true : Boolean(parsed.pwaAutoUpdate),
           cacheLevel: isCacheLevel(parsed.cacheLevel) ? parsed.cacheLevel : 'assets',
           errorUx: isErrorUx(parsed.errorUx) ? parsed.errorUx : 'verbose',
+          clearAfterEquals: parsed.clearAfterEquals === undefined ? true : Boolean(parsed.clearAfterEquals),
         });
       } catch {
         // Ignore malformed payloads — next write will heal them.

@@ -100,7 +100,18 @@ export function formatScientific(value: number, precisionDigits: number = DEFAUL
     minimumFractionDigits: decimals,
     useGrouping: false,
   });
-  return formatter.format(rounded);
+  return trimTrailingZeros(formatter.format(rounded));
+}
+
+/** Strip trailing zeros after the decimal point. If every fractional digit is
+ *  zero, also strip the decimal point so `5.00000` → `5`, `5.50000` → `5.5`.
+ *  Preserves a leading minus sign. Pure display layer — does not change the
+ *  underlying numeric value. */
+function trimTrailingZeros(s: string): string {
+  if (!s.includes('.')) return s;
+  const sign = s.startsWith('-') ? '-' : '';
+  const body = sign ? s.slice(1) : s;
+  return sign + body.replace(/0+$/, '').replace(/\.$/, '');
 }
 
 export const SCIENTIFIC_FUNCTIONS: Record<string, ScientificFunction> = {

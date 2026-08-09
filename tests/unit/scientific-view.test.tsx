@@ -63,8 +63,8 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('button', { name: '8' }));
     await user.click(screen.getByRole('button', { name: '!' }));
     await user.click(screen.getByTestId('key-equals'));
-    // Scientific formatter pads to 12 decimals.
-    expect(screen.getByTestId('display-value')).toHaveTextContent('40320.000000000000');
+    // Trailing zeros are trimmed so the result reads as an integer.
+    expect(screen.getByTestId('display-value')).toHaveTextContent('40320');
   });
 
   it('supports nCr via function button', async () => {
@@ -82,25 +82,25 @@ describe('ScientificView interactions', () => {
   // then presses =.
   describe('every scientific function button evaluates via the UI', () => {
     const cases: ReadonlyArray<{ name: RegExp | string; type: string; expectMatch: RegExp | string }> = [
-      { name: '√', type: '4)', expectMatch: '2.000000000000' },
-      { name: '∛', type: '8)', expectMatch: '2.000000000000' },
-      { name: 'ln', type: '1)', expectMatch: '0.000000000000' },
-      { name: /log₁₀/, type: '100)', expectMatch: '2.000000000000' },
-      { name: /log₂/, type: '8)', expectMatch: '3.000000000000' },
+      { name: '√', type: '4)', expectMatch: '2' },
+      { name: '∛', type: '8)', expectMatch: '2' },
+      { name: 'ln', type: '1)', expectMatch: '0' },
+      { name: /log₁₀/, type: '100)', expectMatch: '2' },
+      { name: /log₂/, type: '8)', expectMatch: '3' },
       { name: 'eˣ', type: '1)', expectMatch: /2\.7/ }, // e^1 ≈ 2.718
-      { name: 'xʸ', type: '2,3)', expectMatch: '8.000000000000' },
-      { name: 'sin', type: '0)', expectMatch: '0.000000000000' },
-      { name: 'cos', type: '0)', expectMatch: '1.000000000000' },
-      { name: 'tan', type: '0)', expectMatch: '0.000000000000' },
+      { name: 'xʸ', type: '2,3)', expectMatch: '8' },
+      { name: 'sin', type: '0)', expectMatch: '0' },
+      { name: 'cos', type: '0)', expectMatch: '1' },
+      { name: 'tan', type: '0)', expectMatch: '0' },
       { name: /sin⁻¹/, type: '1)', expectMatch: /1\.57/ }, // π/2 ≈ 1.5708
-      { name: /cos⁻¹/, type: '1)', expectMatch: '0.000000000000' },
-      { name: /tan⁻¹/, type: '0)', expectMatch: '0.000000000000' },
-      { name: 'sinh', type: '0)', expectMatch: '0.000000000000' },
-      { name: 'cosh', type: '0)', expectMatch: '1.000000000000' },
-      { name: 'tanh', type: '0)', expectMatch: '0.000000000000' },
-      { name: 'n!', type: '5)', expectMatch: '120.000000000000' },
-      { name: 'nPr', type: '5,2)', expectMatch: '20.000000000000' },
-      { name: 'nCr', type: '5,2)', expectMatch: '10.000000000000' },
+      { name: /cos⁻¹/, type: '1)', expectMatch: '0' },
+      { name: /tan⁻¹/, type: '0)', expectMatch: '0' },
+      { name: 'sinh', type: '0)', expectMatch: '0' },
+      { name: 'cosh', type: '0)', expectMatch: '1' },
+      { name: 'tanh', type: '0)', expectMatch: '0' },
+      { name: 'n!', type: '5)', expectMatch: '120' },
+      { name: 'nPr', type: '5,2)', expectMatch: '20' },
+      { name: 'nCr', type: '5,2)', expectMatch: '10' },
     ];
 
     for (const c of cases) {

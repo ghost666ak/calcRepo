@@ -240,6 +240,16 @@ export function SettingsDrawer({ open, onClose }: Props): JSX.Element | null {
             </label>
           ))}
         </fieldset>
+        <label className="settings-drawer__option">
+          <input
+            type="checkbox"
+            checked={preferences.clearAfterEquals}
+            onChange={() => update({ clearAfterEquals: !preferences.clearAfterEquals })}
+            data-testid="clear-after-equals"
+          />
+          <span className="settings-drawer__option-label">{t('settings.clearAfterEquals')}</span>
+          <span className="settings-drawer__hint">{t('settings.clearAfterEqualsHint')}</span>
+        </label>
       </section>
 
       <section className="settings-drawer__section">

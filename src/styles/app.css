@@ -196,6 +196,15 @@
 .app-shell__main {
   display: grid;
   gap: var(--space-4);
+  /* Sections inside are grid children — by default they shrink to min-content,
+     which lets an unbounded inner element (like a wide display value) push
+     the whole column past the viewport. Forcing min-width: 0 keeps them
+     inside the .app-shell max-width. */
+  min-width: 0;
+}
+
+.app-shell__main > * {
+  min-width: 0;
 }
 
 .mode-tabs ul {
@@ -236,12 +245,18 @@
 .display {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background-color: var(--color-surface);
+  /* Without min-width: 0 a grid/flex child grows to its longest unbreakable
+     child and the whole calculator ends up wider than the viewport when the
+     user enters a long expression. */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .display__mode {
@@ -258,9 +273,15 @@
   text-align: right;
   min-height: 1.25em;
   max-width: 100%;
+  /* inline-block (not span) so overflow-x actually clips — a span with
+     overflow scrolls its parent instead of itself, which is what was
+     stretching the layout when the expression outgrew the container. */
+  display: inline-block;
   overflow-x: auto;
+  overflow-y: hidden;
   white-space: nowrap;
   scrollbar-width: thin;
+  align-self: flex-end;
   /* Let scroll feel deliberate rather than sudden — short expressions stay
      pinned to the right edge as in most calculators. */
   scroll-behavior: smooth;
@@ -274,6 +295,8 @@
   font-size: clamp(1.5rem, 6vw, 2.5rem);
   word-break: break-all;
   text-align: right;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .display__error {
@@ -978,6 +1001,26 @@
 
 .base-view__presets .key {
   flex: 1;
+}
+
+.base-view__field-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* Out-of-range / invalid base input — same treatment as the inline error
+   text below the converter. The selector uses [aria-invalid] so the rule
+   picks up any future invalid inputs in this view without further wiring. */
+.base-view__field input[aria-invalid='true'] {
+  border-color: var(--color-error);
+  outline-color: var(--color-error);
+}
+
+.base-view__error {
+  color: var(--color-error);
+  margin: 0;
+  font-size: 0.8125rem;
 }
 
 .base-view__output {
