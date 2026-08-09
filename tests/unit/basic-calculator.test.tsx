@@ -173,4 +173,60 @@ describe('BasicView interactions', () => {
     // The trailing "+" should be highlighted.
     expect(errorSpan?.textContent).toBe('+');
   });
+
+  it('surfaces an inline error when a second decimal is pressed in the same number', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '5' }));
+    await user.click(screen.getByRole('button', { name: '.' }));
+    await user.click(screen.getByRole('button', { name: '5' }));
+    // Pressing "." a second time must surface an error — silently dropping
+    // the keystroke was hiding a real typo.
+    await user.click(screen.getByRole('button', { name: '.' }));
+    const error = screen.getByTestId('display-error');
+    expect(error).toHaveTextContent(/decimal point/i);
+    // Expression state remains the previous valid value, NOT a truncated
+    // "5.5." nor a silently-modified "5.55".
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('5.5');
+  });
+
+  it('surfaces an inline error when a letter is typed instead of dropping it', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.keyboard('5');
+    await user.keyboard('s');
+    const error = screen.getByTestId('display-error');
+    expect(error).toHaveTextContent(/Unexpected character "s"/i);
+    // Expression state is unchanged.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('5');
+  });
+
+  it('surfaces an inline error when a comma is typed', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.keyboard('5');
+    await user.keyboard(',');
+    const error = screen.getByTestId('display-error');
+    expect(error).toHaveTextContent(/Unexpected character ","/i);
+  });
+
+  it('computes factorial via the keyboard in basic mode', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.keyboard('5');
+    await user.keyboard('!');
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('display-value')).toHaveTextContent('120');
+  });
+
+  it('clears the inline error on the next valid press', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.keyboard('5');
+    await user.keyboard('s');
+    expect(screen.getByTestId('display-error')).toBeInTheDocument();
+    // Any valid press should clear the error.
+    await user.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.queryByTestId('display-error')).not.toBeInTheDocument();
+  });
 });

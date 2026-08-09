@@ -27,7 +27,7 @@ export interface UseBasicCalculatorResult {
 
 const MAX_HISTORY = 20;
 
-const OPERATORS = new Set(['+', '-', '*', '/', '^', '%', '(', ')']);
+const OPERATORS = new Set(['+', '-', '*', '/', '^', '%', '(', ')', '!']);
 
 export function useBasicCalculator(): UseBasicCalculatorResult {
   const [expression, setExpression] = useState('');
@@ -103,9 +103,18 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     if (shouldReset) wasJustEvaluated.current = false;
     setExpression((current) => {
       const base = shouldReset ? '' : current;
-      const next = appendDecimal(base);
-      setDisplay(next === '0' ? '0.' : next);
-      return next;
+      const result = appendDecimal(base);
+      if (!result.ok) {
+        // The current number segment already has a decimal point. Surface an
+        // inline error so the user knows the keystroke was rejected — the
+        // silent-drop behaviour here was hiding a real typo (e.g. 5.5.5).
+        setError('Number already has a decimal point.');
+        setErrorPosition(base.length);
+        setDisplay(base);
+        return base;
+      }
+      setDisplay(result.value === '0' ? '0.' : result.value);
+      return result.value;
     });
   }, [preferences.clearAfterEquals]);
 
@@ -221,6 +230,12 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
       } else if (key === '^') {
         press('^');
         event.preventDefault();
+      } else if (key === '!') {
+        // Factorial is a postfix operator in the parser (postfix); route to
+        // press so it appends like other operators. Gives basic mode the
+        // same factorial capability the scientific keypad has via the ! key.
+        press('!');
+        event.preventDefault();
       } else if (key === 'Enter' || key === '=') {
         equals();
         event.preventDefault();
@@ -229,6 +244,12 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         event.preventDefault();
       } else if (key === 'Escape') {
         clear();
+        event.preventDefault();
+      } else if (/^[a-zA-Z,]$/.test(key)) {
+        // Letters and commas aren't valid in the basic expression. Surface
+        // an inline error so the user knows the keystroke was rejected
+        // instead of silently disappearing.
+        setError(`Unexpected character "${key}"`);
         event.preventDefault();
       }
     };
@@ -247,14 +268,17 @@ function appendDigit(current: string, digit: string): string {
   return current + digit;
 }
 
-function appendDecimal(current: string): string {
-  if (current === '') return '0.';
-  if (current.endsWith('.')) return current;
+/** Result of trying to append a decimal point. `ok: false` means the current
+ *  number segment already has one and the keystroke must be rejected. */
+function appendDecimal(
+  current: string,
+): { ok: true; value: string } | { ok: false } {
+  if (current === '') return { ok: true, value: '0.' };
   const segments = current.split(/[-+*/^(%]/);
   const tail = segments[segments.length - 1] ?? '';
-  if (tail.includes('.')) return current;
-  if (tail === '') return current + '.';
-  return current + '.';
+  if (tail.includes('.')) return { ok: false };
+  if (tail === '') return { ok: true, value: `${current}.` };
+  return { ok: true, value: `${current}.` };
 }
 
 function appendOperator(current: string, op: string): string {
