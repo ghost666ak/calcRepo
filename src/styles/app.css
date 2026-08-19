@@ -994,8 +994,85 @@
 }
 
 .error-boundary {
+  display: grid;
+  gap: var(--space-4);
+  place-items: center;
+  min-height: 100dvh;
   padding: var(--space-6);
   text-align: center;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+}
+
+.error-boundary__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.error-boundary__message {
+  margin: 0;
+  max-width: min(100%, 32rem);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-error);
+  overflow-wrap: anywhere;
+  /* Long chunk URLs can be much taller than the viewport; let the page
+     scroll on phones rather than clipping the only diagnostic info. */
+  max-height: 50dvh;
+  overflow-y: auto;
+}
+
+.error-boundary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.error-boundary__button {
+  min-height: 44px;
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background-color: var(--color-accent);
+  color: var(--color-accent-fg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.error-boundary__button:hover,
+.error-boundary__button:focus-visible {
+  filter: brightness(0.92);
+}
+
+.error-boundary__button--secondary {
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+  border-color: var(--color-border);
+}
+
+.error-boundary__hint {
+  margin: 0;
+  max-width: min(100%, 32rem);
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+@media (max-width: 480px) {
+  .error-boundary {
+    padding: var(--space-4);
+  }
+  .error-boundary__actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 20rem;
+  }
+  .error-boundary__button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {

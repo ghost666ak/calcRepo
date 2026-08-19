@@ -6,7 +6,7 @@
 //   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
 //   - "extended" — assets + cache the most recent navigation response for offline boot.
 
-const VERSION = 'calcrepo-v21';
+const VERSION = 'calcrepo-v22';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [
@@ -84,6 +84,28 @@ self.addEventListener('fetch', (event) => {
               caches
                 .open(RUNTIME_CACHE)
                 .then((cache) => cache.put(request, copy))
+                .catch(() => undefined);
+              return response;
+            }
+            // Server doesn't have this hash anymore — evict any cached copy
+            // (in either bucket) so the next reload can fall back to the
+            // bundled index.html rather than looping on a missing chunk.
+            if (response && response.status === 404) {
+              caches
+                .open(STATIC_CACHE)
+                .then((cache) => cache.delete(request))
+                .catch(() => undefined);
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.delete(request))
+                .catch(() => undefined);
+              caches
+                .open(STATIC_CACHE)
+                .then((cache) => cache.delete('./index.html'))
+                .catch(() => undefined);
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.delete('./index.html'))
                 .catch(() => undefined);
             }
             return response;
