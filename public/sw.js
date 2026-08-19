@@ -6,7 +6,7 @@
 //   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
 //   - "extended" — assets + cache the most recent navigation response for offline boot.
 
-const VERSION = 'calcrepo-v20';
+const VERSION = 'calcrepo-v21';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [
@@ -69,6 +69,40 @@ self.addEventListener('fetch', (event) => {
   // (which is served from cache anyway via APP_SHELL precache).
   if (cacheLevel === 'shell') return;
 
+  if (cacheLevel === 'max') {
+    // Cache-first for every same-origin GET. Once the user has loaded the
+    // app at least once online, every page and asset is reachable offline
+    // permanently (until the VERSION bumps, at which point one online load
+    // re-warms the cache).
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request)
+          .then((response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const copy = response.clone();
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(request, copy))
+                .catch(() => undefined);
+            }
+            return response;
+          })
+          .catch(() => {
+            // Offline fallback: serve the last good HTML for navigations,
+            // and a synthetic 504 for asset misses so the page renders.
+            if (request.mode === 'navigate') {
+              return caches
+                .match('./index.html')
+                .then((hit) => hit || caches.match('./'));
+            }
+            return new Response('', { status: 504, statusText: 'Offline' });
+          });
+      }),
+    );
+    return;
+  }
+
   if (request.mode === 'navigate') {
     if (cacheLevel === 'extended') {
       // Cache the latest navigation response so offline boots have something fresh.
@@ -129,8 +163,22 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
   if (event.data && typeof event.data === 'object' && event.data.type === 'SET_CACHE_LEVEL') {
-    if (event.data.level === 'shell' || event.data.level === 'assets' || event.data.level === 'extended') {
+    if (
+      event.data.level === 'shell' ||
+      event.data.level === 'assets' ||
+      event.data.level === 'extended' ||
+      event.data.level === 'max'
+    ) {
       cacheLevel = event.data.level;
+      // When switching up to "max", eagerly pull the app shell into the static
+      // cache so the next boot works even before the user has navigated.
+      // addAll is a no-op for entries already present, so it's safe to call
+      // every time the level message arrives.
+      if (cacheLevel === 'max') {
+        caches
+          .open(STATIC_CACHE)
+          .then((cache) => cache.addAll(APP_SHELL).catch(() => undefined));
+      }
     }
   }
 });

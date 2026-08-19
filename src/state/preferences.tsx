@@ -33,7 +33,7 @@ function isLanguage(value: unknown): value is Language {
 }
 
 function isCacheLevel(value: unknown): value is CacheLevel {
-  return value === 'shell' || value === 'assets' || value === 'extended';
+  return value === 'shell' || value === 'assets' || value === 'extended' || value === 'max';
 }
 
 function isErrorUx(value: unknown): value is ErrorUx {

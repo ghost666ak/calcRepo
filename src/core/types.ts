@@ -26,8 +26,10 @@ export type Language = 'en' | 'hi';
  * - 'shell'    — only the install-time app shell is cached (default; smallest footprint).
  * - 'assets'   — app shell + every same-origin static asset (current production behaviour).
  * - 'extended' — also caches the last successful HTML response for offline app boots.
+ * - 'max'      — cache-first for every same-origin GET (navigations + assets). Once the
+ *                app has been loaded once online, it boots and runs fully offline.
  */
-export type CacheLevel = 'shell' | 'assets' | 'extended';
+export type CacheLevel = 'shell' | 'assets' | 'extended' | 'max';
 
 /**
  * How much feedback the calculator shows when an expression has an error.

@@ -15,6 +15,7 @@ const CACHE_LEVELS: ReadonlyArray<{ value: CacheLevel; labelKey: string }> = [
   { value: 'shell', labelKey: 'settings.cacheLevelShell' },
   { value: 'assets', labelKey: 'settings.cacheLevelAssets' },
   { value: 'extended', labelKey: 'settings.cacheLevelExtended' },
+  { value: 'max', labelKey: 'settings.cacheLevelMax' },
 ];
 const ERROR_UX_LEVELS: ReadonlyArray<{
   value: ErrorUx;

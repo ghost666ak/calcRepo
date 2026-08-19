@@ -9,8 +9,8 @@ export function registerServiceWorker(): void {
     try {
       const raw = window.localStorage.getItem('calcRepo.preferences.v1');
       const level: CacheLevel =
-        raw && /"cacheLevel":"(shell|assets|extended)"/.test(raw)
-          ? (raw.match(/"cacheLevel":"(shell|assets|extended)"/)?.[1] as CacheLevel)
+        raw && /"cacheLevel":"(shell|assets|extended|max)"/.test(raw)
+          ? (raw.match(/"cacheLevel":"(shell|assets|extended|max)"/)?.[1] as CacheLevel)
           : 'assets';
       const target = registration.active ?? registration.waiting ?? registration.installing;
       target?.postMessage({ type: 'SET_CACHE_LEVEL', level });
@@ -68,7 +68,7 @@ export function registerServiceWorker(): void {
 function readCacheLevel(): CacheLevel {
   try {
     const raw = window.localStorage.getItem('calcRepo.preferences.v1');
-    const m = raw?.match(/"cacheLevel":"(shell|assets|extended)"/);
+    const m = raw?.match(/"cacheLevel":"(shell|assets|extended|max)"/);
     return (m?.[1] as CacheLevel) ?? 'assets';
   } catch {
     return 'assets';

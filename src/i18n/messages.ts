@@ -39,6 +39,7 @@ export interface Messages {
     readonly cacheLevelShell: string;
     readonly cacheLevelAssets: string;
     readonly cacheLevelExtended: string;
+    readonly cacheLevelMax: string;
     readonly clearCache: string;
     readonly cacheCleared: string;
     readonly cacheSize: string;
@@ -239,6 +240,7 @@ export const EN_MESSAGES: Messages = {
     cacheLevelShell: 'App shell only — smallest footprint',
     cacheLevelAssets: 'App shell + assets (recommended)',
     cacheLevelExtended: 'Extended — also cache the last page',
+    cacheLevelMax: 'Max — cache everything, work fully offline',
     clearCache: 'Clear cached files',
     cacheCleared: 'Cached files cleared.',
     cacheSize: 'Cached size: {size}',
@@ -437,6 +439,7 @@ const HI: Messages = {
     cacheLevelShell: 'केवल ऐप शेल — सबसे छोटा',
     cacheLevelAssets: 'ऐप शेल + एसेट (अनुशंसित)',
     cacheLevelExtended: 'विस्तारित — पिछला पेज भी कैश करें',
+    cacheLevelMax: 'अधिकतम — सब कुछ कैश करें, पूर्णतः ऑफलाइन चलाएं',
     clearCache: 'कैश फ़ाइलें साफ़ करें',
     cacheCleared: 'कैश फ़ाइलें साफ़ हो गईं।',
     cacheSize: 'कैश आकार: {size}',
