@@ -3,6 +3,7 @@ import { listScientificFunctions } from '../../core/scientific/functions';
 import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
+import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useScientificCalculator } from './useScientificCalculator';
 import type { ScientificHistoryEntry } from './useScientificCalculator';
 import { usePreferences } from '../../state/preferences';
@@ -226,7 +227,7 @@ export function ScientificView({
               <li key={`${entry.expression}-${index}`}>
                 <code>{entry.expression}</code>
                 <span> = </span>
-                <strong>{entry.result}</strong>
+                <HistoryAnswer value={entry.result} />
                 {!autoSaveEnabled && onManualSave && (
                   <button
                     type="button"

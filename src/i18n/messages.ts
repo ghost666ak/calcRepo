@@ -185,6 +185,8 @@ export interface Messages {
     readonly saveEntry: string;
     readonly removeEntry: string;
     readonly createdAtFallback: string;
+    readonly expandAnswer: string;
+    readonly collapseAnswer: string;
   };
   readonly historyPanel: {
     readonly title: string;
@@ -383,6 +385,8 @@ export const EN_MESSAGES: Messages = {
     saveEntry: 'Save to history',
     removeEntry: 'Discard',
     createdAtFallback: '(no date)',
+    expandAnswer: 'Expand long answer',
+    collapseAnswer: 'Collapse answer',
   },
   historyPanel: {
     title: 'History',
@@ -579,6 +583,8 @@ const HI: Messages = {
     saveEntry: 'इतिहास में सेव',
     removeEntry: 'हटाएँ',
     createdAtFallback: '(कोई दिनांक नहीं)',
+    expandAnswer: 'लंबा उत्तर विस्तृत करें',
+    collapseAnswer: 'उत्तर संकुचित करें',
   },
   historyPanel: {
     title: 'इतिहास',

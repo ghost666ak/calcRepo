@@ -566,26 +566,79 @@
 
 .history li {
   display: flex;
-  gap: var(--space-2);
+  /* Allow the answer to drop to its own row when the question is long.
+     Without flex-wrap, a long unbroken code block prevented the strong from
+     shrinking and pushed the card wider than the viewport. */
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
   align-items: baseline;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-family: var(--font-mono);
+  /* Defensive: keep the li's intrinsic width from exceeding the card. */
+  min-width: 0;
 }
 
 .history li:hover {
   background-color: var(--color-surface-2);
 }
 
+.history li code,
+.history li .history-answer {
+  /* min-width: 0 lets flex children shrink past their content width so the
+     long number / expression can break instead of overflowing horizontally. */
+  min-width: 0;
+  max-width: 100%;
+}
+
 .history li code {
   color: var(--color-muted);
   word-break: break-all;
+  overflow-wrap: anywhere;
+  flex: 1 1 auto;
 }
 
-.history li strong {
+.history li .history-answer {
   color: var(--color-accent);
   margin-left: auto;
+  /* Any character is a valid break point, so a 30-digit result like
+     123456789012344870000000000000 no longer overflows the card. */
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  text-align: right;
+  font-weight: 700;
+}
+
+/* Long-result truncation: shown as a button so it's keyboard-focusable and
+   announced as a toggle by assistive tech. Short results stay static via
+   the .history-answer class without --truncated/--expanded suffix. */
+.history-answer--truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+
+.history-answer--truncated:hover,
+.history-answer--truncated:focus-visible {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.history-answer--expanded {
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  text-align: right;
 }
 
 .history li button {

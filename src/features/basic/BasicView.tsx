@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Key } from '../../components/Key';
 import { ExpressionDisplay } from '../../components/ExpressionDisplay';
+import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
 import { usePreferences } from '../../state/preferences';
@@ -145,7 +146,7 @@ export function BasicView({
               <li key={`${entry.expression}-${index}`}>
                 <code>{entry.expression}</code>
                 <span> = </span>
-                <strong>{entry.result}</strong>
+                <HistoryAnswer value={entry.result} />
                 {!autoSaveEnabled && onManualSave && (
                   <button
                     type="button"

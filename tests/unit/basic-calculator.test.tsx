@@ -229,4 +229,19 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '2' }));
     expect(screen.queryByTestId('display-error')).not.toBeInTheDocument();
   });
+
+  it('renders long answers as expandable toggle buttons in the inline history', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    // Mult two big numbers — result is >24 digits and triggers the toggle.
+    for (const ch of '999999999999999*123456789012345') await user.keyboard(ch);
+    await user.keyboard('{Enter}');
+    // Open the <details> so the entry list renders.
+    await user.click(screen.getByText(/History/));
+    const toggle = await screen.findByTestId('history-answer-toggle');
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveClass('history-answer--truncated');
+    await user.click(toggle);
+    expect(toggle).toHaveClass('history-answer--expanded');
+  });
 });
