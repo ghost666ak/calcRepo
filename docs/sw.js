@@ -12,7 +12,7 @@
 // <script src>/<link href> found in index.html, so the hashed JS/CSS chunks
 // are guaranteed to be present offline after one online visit.
 
-const VERSION = 'calcrepo-v24';
+const VERSION = 'calcrepo-v25';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [
@@ -75,6 +75,30 @@ function sameOriginUrl(href) {
   }
 }
 
+async function precacheBuildManifest(cache) {
+  // The build emits precache-manifest.json (scripts/generate-precache-manifest.mjs):
+  // every shipped file with its relative path. Trusting this list means we
+  // precache absolutely everything (assets/, pwa/, index.html, manifest, …)
+  // without parsing index.html or the web app manifest. If the build script
+  // hasn't run, fall through to the runtime-discovery path.
+  try {
+    const manifestUrl = new URL('./precache-manifest.json', self.location.href).href;
+    const response = await fetch(manifestUrl, { cache: 'reload' });
+    if (!response || !response.ok) return false;
+    const json = await response.json();
+    const entries = Array.isArray(json?.files) ? json.files : [];
+    const urls = entries
+      .map((e) => (e && typeof e.path === 'string' ? `./${e.path}` : null))
+      .filter((u) => u !== null)
+      .map(sameOriginUrl)
+      .filter((u) => u !== null);
+    await Promise.all(urls.map((u) => cache.add(u).catch(() => undefined)));
+    return urls.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function precacheDiscoveredAssets(cache) {
   // Always bypass the HTTP cache so we get the current build's chunk hashes,
   // even if a stale index.html is sitting in the SW cache.
@@ -121,7 +145,13 @@ self.addEventListener('install', (event) => {
       .open(STATIC_CACHE)
       .then(async (cache) => {
         await cache.addAll(APP_SHELL).catch(() => undefined);
-        await precacheDiscoveredAssets(cache).catch(() => undefined);
+        // Build-time manifest is the authoritative precache list; runtime
+        // discovery stays as a fallback for the case where the manifest
+        // wasn't generated (e.g. local dev, mid-deploy).
+        const usedBuildManifest = await precacheBuildManifest(cache).catch(() => false);
+        if (!usedBuildManifest) {
+          await precacheDiscoveredAssets(cache).catch(() => undefined);
+        }
       })
       .then(() => self.skipWaiting()),
   );
@@ -138,6 +168,14 @@ self.addEventListener('activate', (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
+      .then(() => {
+        // Enable navigation preload so the first navigation can race the
+        // SW boot. Browsers without it (older Safari) ignore the call.
+        if ('navigationPreload' in self.registration) {
+          return self.registration.navigationPreload.enable();
+        }
+        return undefined;
+      })
       .then(() => self.clients.claim()),
   );
 });
@@ -171,7 +209,19 @@ self.addEventListener('fetch', (event) => {
     // re-warms the cache).
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached;
+        if (cached) {
+          // For navigations, also race the navigation preload response so
+          // a faster fresh copy wins when the SW cache is stale. preload
+          // returns a Response or undefined; undefined falls through to
+          // the cached copy.
+          if (request.mode === 'navigate' && event.preloadResponse) {
+            return Promise.race([
+              cached,
+              event.preloadResponse.then((preloaded) => preloaded || cached),
+            ]);
+          }
+          return cached;
+        }
         return fetch(request)
           .then((response) => {
             if (response && response.status === 200 && response.type === 'basic') {
@@ -237,9 +287,16 @@ self.addEventListener('fetch', (event) => {
       return;
     }
     // "assets" level: network-first navigations, fall back to cached shell.
+    // Race the navigation preload response so the SW boot doesn't delay TTFB.
     event.respondWith(
-      fetch(request)
-        .catch(() => caches.match('./index.html').then((cached) => cached || caches.match('./'))),
+      Promise.race([
+        event.preloadResponse ? event.preloadResponse : fetch(request).catch(() => undefined),
+        fetch(request).catch(() => undefined),
+      ]).then(
+        (response) =>
+          response ||
+          caches.match('./index.html').then((cached) => cached || caches.match('./')),
+      ),
     );
     return;
   }
@@ -299,7 +356,10 @@ self.addEventListener('message', (event) => {
           .open(STATIC_CACHE)
           .then(async (cache) => {
             await cache.addAll(APP_SHELL).catch(() => undefined);
-            await precacheDiscoveredAssets(cache).catch(() => undefined);
+            const usedBuildManifest = await precacheBuildManifest(cache).catch(() => false);
+            if (!usedBuildManifest) {
+              await precacheDiscoveredAssets(cache).catch(() => undefined);
+            }
           });
       }
     }

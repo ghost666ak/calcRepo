@@ -6,15 +6,16 @@
   "description": "Static developer calculator (basic, scientific, base conversion, programmer, coding toolbox).",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build && node scripts/generate-pwa-screenshots.mjs",
-    "build:pages": "tsc -b --noEmit && CALCREPO_OUTDIR=docs vite build && CALCREPO_OUTDIR=docs node scripts/generate-pwa-screenshots.mjs",
+    "build": "tsc -b --noEmit && vite build && node scripts/generate-pwa-screenshots.mjs && node scripts/generate-precache-manifest.mjs",
+    "build:pages": "tsc -b --noEmit && CALCREPO_OUTDIR=docs vite build && CALCREPO_OUTDIR=docs node scripts/generate-pwa-screenshots.mjs && CALCREPO_OUTDIR=docs node scripts/generate-precache-manifest.mjs",
     "preview": "vite preview --port 4173",
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "screenshots": "node scripts/generate-pwa-screenshots.mjs"
+    "screenshots": "node scripts/generate-pwa-screenshots.mjs",
+    "precache:manifest": "node scripts/generate-precache-manifest.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

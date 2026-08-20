@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-08-20T05:14:20.941Z",
+  "files": [
+    {
+      "path": "assets/ProgrammerView-D1zFLWV8.js",
+      "size": 15401
+    },
+    {
+      "path": "assets/ToolsView-Bq3Xyiiw.js",
+      "size": 12444
+    },
+    {
+      "path": "assets/index-B9An5Ai3.css",
+      "size": 28805
+    },
+    {
+      "path": "assets/index-rOzYXkSR.js",
+      "size": 228485
+    },
+    {
+      "path": "favicon.svg",
+      "size": 891
+    },
+    {
+      "path": "index.html",
+      "size": 1979
+    },
+    {
+      "path": "manifest.webmanifest",
+      "size": 3486
+    },
+    {
+      "path": "pwa/icon-192.png",
+      "size": 10952
+    },
+    {
+      "path": "pwa/icon-512.png",
+      "size": 32263
+    },
+    {
+      "path": "pwa/icon-maskable-512.png",
+      "size": 25723
+    },
+    {
+      "path": "pwa/icon-maskable.svg",
+      "size": 2874
+    },
+    {
+      "path": "pwa/icon.svg",
+      "size": 2747
+    },
+    {
+      "path": "pwa/screenshot-basic-narrow.png",
+      "size": 39947
+    },
+    {
+      "path": "pwa/screenshot-basic.png",
+      "size": 29073
+    },
+    {
+      "path": "pwa/screenshot-scientific.png",
+      "size": 28732
+    },
+    {
+      "path": "pwa/shortcut-base.svg",
+      "size": 1068
+    },
+    {
+      "path": "pwa/shortcut-basic.svg",
+      "size": 1944
+    },
+    {
+      "path": "pwa/shortcut-programmer.svg",
+      "size": 975
+    },
+    {
+      "path": "pwa/shortcut-scientific.svg",
+      "size": 889
+    },
+    {
+      "path": "pwa/shortcut-settings.svg",
+      "size": 812
+    },
+    {
+      "path": "pwa/shortcut-tools.svg",
+      "size": 909
+    },
+    {
+      "path": "sw.js",
+      "size": 14525
+    }
+  ]
+}
