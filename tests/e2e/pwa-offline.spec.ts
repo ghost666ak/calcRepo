@@ -17,21 +17,33 @@ test.describe('PWA offline behavior', () => {
     }
   });
 
-  test('service worker registers and serves the app shell offline', async ({ page, context }) => {
+  test('service worker registers and serves the full app offline (shell + lazy chunks)', async ({ page, context }) => {
+    // Online: warm the SW + precache + lazy chunks.
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    // Wait for the SW to take control.
     await page.waitForFunction(async () => {
       if (!('serviceWorker' in navigator)) return false;
       const reg = await navigator.serviceWorker.getRegistration();
       return Boolean(reg && reg.active);
     }, undefined, { timeout: 15_000 });
 
-    // Go offline and reload — the cached shell should still render.
+    // Trigger the lazy chunks (ProgrammerView, ToolsView) so they end up in cache.
+    await page.goto('/?mode=programmer');
+    await expect(page.getByRole('heading', { name: /programmer/i })).toBeVisible();
+    await page.goto('/?mode=tools');
+    await expect(page.getByRole('heading', { name: /tools/i })).toBeVisible();
+
+    // Go offline and reload — shell + every lazy chunk should still render.
     await context.setOffline(true);
-    await page.reload();
+    await page.goto('/');
     await expect(page.getByRole('heading', { name: /calcRepo/i })).toBeVisible();
     await expect(page.getByTestId('display-value')).toBeVisible();
+
+    await page.goto('/?mode=programmer');
+    await expect(page.getByRole('heading', { name: /programmer/i })).toBeVisible();
+
+    await page.goto('/?mode=tools');
+    await expect(page.getByRole('heading', { name: /tools/i })).toBeVisible();
     await context.setOffline(false);
   });
 });

@@ -5,8 +5,14 @@
 //   - "shell"    — only install-time app shell. No runtime caching.
 //   - "assets"   — cache-first for app shell + same-origin assets, network-first for navigations.
 //   - "extended" — assets + cache the most recent navigation response for offline boot.
+//   - "max"      — cache-first for every same-origin GET; offline boot works
+//                  for the whole site once the install-time precache has run.
+//
+// At install (and on upgrade to "max"), we precache the app shell plus every
+// <script src>/<link href> found in index.html, so the hashed JS/CSS chunks
+// are guaranteed to be present offline after one online visit.
 
-const VERSION = 'calcrepo-v22';
+const VERSION = 'calcrepo-v24';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const APP_SHELL = [
@@ -19,15 +25,104 @@ const APP_SHELL = [
   './pwa/icon-192.png',
   './pwa/icon-512.png',
   './pwa/icon-maskable-512.png',
+  // PWA shortcut icons referenced from the web app manifest. The OS pulls
+  // these during install / launch, so they need to be present offline too.
+  './pwa/shortcut-basic.svg',
+  './pwa/shortcut-scientific.svg',
+  './pwa/shortcut-base.svg',
+  './pwa/shortcut-programmer.svg',
+  './pwa/shortcut-tools.svg',
+  './pwa/shortcut-settings.svg',
 ];
 
 let cacheLevel = 'assets';
+
+// Pull every <script src> and <link href> out of the HTML so we can precache
+// the actual hashed chunks at install time. Without this, the SW only
+// precaches the static shell (icons + html); the JS/CSS chunks are only
+// written to RUNTIME_CACHE after a successful online fetch, which means
+// the first offline visit after install or after a deploy fails because
+// the new chunk hashes have never been seen.
+function extractAssetUrls(html) {
+  const urls = new Set();
+  const scriptRe = /<script\b[^>]*?\bsrc=["']([^"']+)["']/g;
+  const linkRe = /<link\b[^>]*?\bhref=["']([^"']+)["']/g;
+  let m;
+  while ((m = scriptRe.exec(html))) urls.add(m[1]);
+  while ((m = linkRe.exec(html))) urls.add(m[1]);
+  return Array.from(urls);
+}
+
+// Pull every "src" out of the web app manifest (icons / shortcuts /
+// screenshots). Anything referenced there must be precached too, otherwise
+// the OS installer / launcher fetches them at a moment when the network may
+// not be available. Naive but tolerant: matches any "src" string in the
+// JSON; ignores cross-origin entries via sameOriginUrl below.
+function extractManifestUrls(manifestJson) {
+  const urls = new Set();
+  const srcRe = /"src"\s*:\s*"([^"]+)"/g;
+  let m;
+  while ((m = srcRe.exec(manifestJson))) urls.add(m[1]);
+  return Array.from(urls);
+}
+
+function sameOriginUrl(href) {
+  try {
+    const u = new URL(href, self.location.href);
+    return u.origin === self.location.origin ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+async function precacheDiscoveredAssets(cache) {
+  // Always bypass the HTTP cache so we get the current build's chunk hashes,
+  // even if a stale index.html is sitting in the SW cache.
+  const indexResponse = await fetch(new URL('./index.html', self.location.href).href, {
+    cache: 'reload',
+  });
+  if (!indexResponse || !indexResponse.ok) return;
+  const html = await indexResponse.text();
+  // Cache the fresh index.html so the offline navigation fallback has it.
+  await cache.put(new URL('./index.html', self.location.href).href, indexResponse.clone()).catch(() => undefined);
+  const htmlUrls = extractAssetUrls(html)
+    .map(sameOriginUrl)
+    .filter((u) => u !== null);
+
+  // Also pull assets referenced by the web app manifest. Skip the manifest
+  // itself (it's already in APP_SHELL) and any entries that 404 (e.g. a
+  // screenshot asset that hasn't been generated yet).
+  let manifestUrls = [];
+  try {
+    const manifestUrl = new URL('./manifest.webmanifest', self.location.href).href;
+    const manifestResponse = await fetch(manifestUrl, { cache: 'reload' });
+    if (manifestResponse && manifestResponse.ok) {
+      const text = await manifestResponse.text();
+      manifestUrls = extractManifestUrls(text)
+        .map(sameOriginUrl)
+        .filter((u) => u !== null && u !== manifestUrl);
+    }
+  } catch {
+    // Manifest unavailable; ignore — runtime caching will pick up missing icons.
+  }
+
+  const urls = Array.from(new Set([...htmlUrls, ...manifestUrls]));
+  if (urls.length === 0) return;
+  // addAll aborts on the first failure; we want partial success so a missing
+  // chunk (e.g. mid-deploy) doesn't block the rest of the shell.
+  await Promise.all(
+    urls.map((u) => cache.add(u).catch(() => undefined)),
+  );
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(APP_SHELL).catch(() => undefined))
+      .then(async (cache) => {
+        await cache.addAll(APP_SHELL).catch(() => undefined);
+        await precacheDiscoveredAssets(cache).catch(() => undefined);
+      })
       .then(() => self.skipWaiting()),
   );
 });
@@ -90,6 +185,7 @@ self.addEventListener('fetch', (event) => {
             // Server doesn't have this hash anymore — evict any cached copy
             // (in either bucket) so the next reload can fall back to the
             // bundled index.html rather than looping on a missing chunk.
+            // Keep index.html in cache; it's the navigation fallback.
             if (response && response.status === 404) {
               caches
                 .open(STATIC_CACHE)
@@ -99,26 +195,27 @@ self.addEventListener('fetch', (event) => {
                 .open(RUNTIME_CACHE)
                 .then((cache) => cache.delete(request))
                 .catch(() => undefined);
-              caches
-                .open(STATIC_CACHE)
-                .then((cache) => cache.delete('./index.html'))
-                .catch(() => undefined);
-              caches
-                .open(RUNTIME_CACHE)
-                .then((cache) => cache.delete('./index.html'))
-                .catch(() => undefined);
             }
             return response;
           })
           .catch(() => {
             // Offline fallback: serve the last good HTML for navigations,
-            // and a synthetic 504 for asset misses so the page renders.
+            // and for asset misses try cached index.html (the SPA shell)
+            // before falling back to a synthetic 504. Returning the shell
+            // lets the React app recover via its own error boundary /
+            // stale-bundle recovery, instead of leaving a blank page.
             if (request.mode === 'navigate') {
               return caches
                 .match('./index.html')
                 .then((hit) => hit || caches.match('./'));
             }
-            return new Response('', { status: 504, statusText: 'Offline' });
+            return caches
+              .match('./index.html')
+              .then(
+                (shell) =>
+                  shell ||
+                  new Response('', { status: 504, statusText: 'Offline' }),
+              );
           });
       }),
     );
@@ -192,14 +289,18 @@ self.addEventListener('message', (event) => {
       event.data.level === 'max'
     ) {
       cacheLevel = event.data.level;
-      // When switching up to "max", eagerly pull the app shell into the static
-      // cache so the next boot works even before the user has navigated.
-      // addAll is a no-op for entries already present, so it's safe to call
-      // every time the level message arrives.
+      // When switching up to "max", eagerly pull the app shell + every
+      // chunk index.html references into the static cache so the next boot
+      // works even before the user has navigated. addAll/add are no-ops for
+      // entries already present, so it's safe to call every time the level
+      // message arrives.
       if (cacheLevel === 'max') {
         caches
           .open(STATIC_CACHE)
-          .then((cache) => cache.addAll(APP_SHELL).catch(() => undefined));
+          .then(async (cache) => {
+            await cache.addAll(APP_SHELL).catch(() => undefined);
+            await precacheDiscoveredAssets(cache).catch(() => undefined);
+          });
       }
     }
   }

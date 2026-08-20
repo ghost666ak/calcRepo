@@ -6,8 +6,8 @@
   "description": "Static developer calculator (basic, scientific, base conversion, programmer, coding toolbox).",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build",
-    "build:pages": "tsc -b --noEmit && CALCREPO_OUTDIR=docs vite build",
+    "build": "tsc -b --noEmit && vite build && node scripts/generate-pwa-screenshots.mjs",
+    "build:pages": "tsc -b --noEmit && CALCREPO_OUTDIR=docs vite build && CALCREPO_OUTDIR=docs node scripts/generate-pwa-screenshots.mjs",
     "preview": "vite preview --port 4173",
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
