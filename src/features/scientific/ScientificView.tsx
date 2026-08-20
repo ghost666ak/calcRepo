@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { listScientificFunctions } from '../../core/scientific/functions';
 import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
-import { ExpressionDisplay } from '../../components/ExpressionDisplay';
+import { ExpressionDisplay, visualiseExpression } from '../../components/ExpressionDisplay';
 import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useScientificCalculator } from './useScientificCalculator';
 import type { ScientificHistoryEntry } from './useScientificCalculator';
@@ -225,7 +225,7 @@ export function ScientificView({
           <ol>
             {history.map((entry, index) => (
               <li key={`${entry.expression}-${index}`}>
-                <code>{entry.expression}</code>
+                <code>{visualiseExpression(entry.expression)}</code>
                 <span> = </span>
                 <HistoryAnswer value={entry.result} />
                 {!autoSaveEnabled && onManualSave && (

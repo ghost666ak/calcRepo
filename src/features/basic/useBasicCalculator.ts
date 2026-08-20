@@ -28,6 +28,9 @@ export interface UseBasicCalculatorResult {
 const MAX_HISTORY = 20;
 
 const OPERATORS = new Set(['+', '-', '*', '/', '^', '%', '(', ')', '!']);
+// Binary operators are the ones that should "continue from the result" after
+// an equals press. Unary operators (`(`, `!`) start a fresh sub-expression.
+const BINARY_OPS = new Set(['+', '-', '*', '/', '^', '%']);
 
 export function useBasicCalculator(): UseBasicCalculatorResult {
   const [expression, setExpression] = useState('');
@@ -86,15 +89,28 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const pressOperator = useCallback((op: string) => {
     setError(null);
     setErrorPosition(null);
-    // Operators don't trigger the post-equals reset — pressing + after =
-    // still appends to the existing expression.
+    // After a successful equals:
+    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from the
+    //     result so the user can extend the calculation. e.g.
+    //     `100*50%` = `50` × → `50 *`, not `100*50% *`.
+    //   - A unary operator (`(`, `!`) starts a fresh sub-expression, so the
+    //     user isn't dragging along stale tokens they didn't ask for. e.g.
+    //     `2+3` = `5` ( → `(`, not `5(`.
+    const fromResult =
+      wasJustEvaluated.current && lastResult !== null && BINARY_OPS.has(op);
+    const shouldReset = wasJustEvaluated.current && !BINARY_OPS.has(op);
     wasJustEvaluated.current = false;
     setExpression((current) => {
-      const next = appendOperator(current, op);
+      const base = fromResult
+        ? lastResult!
+        : shouldReset
+        ? ''
+        : current;
+      const next = appendOperator(base, op);
       setDisplay(next);
       return next;
     });
-  }, []);
+  }, [lastResult]);
 
   const pressDecimal = useCallback(() => {
     setError(null);
@@ -292,7 +308,6 @@ function appendOperator(current: string, op: string): string {
   // `2-(` so the user can build `2 - (3+5)`. Parens always append: dropping
   // the operator on `2×(` was how implicit multiplication worked before, but
   // it silently lost the user's `-`/`+` when grouping after a subtraction.
-  const BINARY_OPS = new Set(['+', '-', '*', '/', '^', '%']);
   if (BINARY_OPS.has(lastChar) && BINARY_OPS.has(op)) {
     return current.slice(0, -1) + op;
   }

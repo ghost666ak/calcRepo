@@ -79,6 +79,55 @@ describe('BasicView interactions', () => {
     expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');
   });
 
+  it('continues from the answer when × is pressed after =', async () => {
+    // Regression for: `100 × 50%` = `50` × → was `100 × 50 ×`, should be `50 ×`.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '1' }));
+    await user.click(screen.getByRole('button', { name: '0' }));
+    await user.click(screen.getByRole('button', { name: '0' }));
+    await user.click(screen.getByRole('button', { name: '×' }));
+    await user.click(screen.getByRole('button', { name: '5' }));
+    await user.click(screen.getByRole('button', { name: '0' }));
+    await user.click(screen.getByRole('button', { name: '%' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('50');
+    await user.click(screen.getByRole('button', { name: '×' }));
+    // Result is the basis for the new expression — not the original question.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('50×');
+  });
+
+  it('continues from the answer when + is pressed after = regardless of clearAfterEquals', async () => {
+    // Even with clearAfterEquals off, a binary operator must start from the
+    // answer — the preference only governs digits/decimals.
+    window.localStorage.setItem(
+      'calcRepo.preferences.v1',
+      JSON.stringify({ clearAfterEquals: false }),
+    );
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '7' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '8' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('15');
+    await user.click(screen.getByRole('button', { name: '−' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('15−');
+  });
+
+  it('starts fresh when ( is pressed after = (paren is not a continuing operator)', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    await user.click(screen.getByRole('button', { name: '(' }));
+    // `(` is unary after `=` — should start a fresh sub-expression.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('(');
+  });
+
   it('keeps appending when clearAfterEquals is off', async () => {
     // Opt out of the new behaviour via storage so the hook reads the preference on mount.
     window.localStorage.setItem(
@@ -243,5 +292,21 @@ describe('BasicView interactions', () => {
     expect(toggle).toHaveClass('history-answer--truncated');
     await user.click(toggle);
     expect(toggle).toHaveClass('history-answer--expanded');
+  });
+
+  it('shows × (not *) in the inline history expression', async () => {
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '2' }));
+    await user.click(screen.getByRole('button', { name: '×' }));
+    await user.click(screen.getByRole('button', { name: '3' }));
+    await user.click(screen.getByTestId('key-equals'));
+    await user.click(screen.getByText(/History/));
+    // The live display also renders `2×3` (the question stays visible after
+    // =), so scope the lookup to the <code> inside the history list.
+    const code = await screen.findByText('2×3', { selector: 'code' });
+    expect(code).toBeInTheDocument();
+    // Defensive: no stray raw * in the entry text.
+    expect(code.textContent).not.toContain('*');
   });
 });

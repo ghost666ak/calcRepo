@@ -114,4 +114,26 @@ describe('ScientificView interactions', () => {
       });
     }
   });
+
+  it('continues from the answer when × is pressed after =', async () => {
+    // Regression: `100 × 50%` = `50` × → was `100 × 50 ×`, should be `50 ×`.
+    const user = userEvent.setup();
+    render(<ScientificView />);
+    await user.keyboard('100*50%');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('50');
+    await user.click(screen.getByRole('button', { name: '×' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('50×');
+  });
+
+  it('starts fresh when a function is pressed after = (not a continuing operator)', async () => {
+    const user = userEvent.setup();
+    render(<ScientificView />);
+    await user.keyboard('2+3');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    await user.click(screen.getByRole('button', { name: 'sin' }));
+    // sin( is not a continuing operator — should start a fresh sub-expression.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent(/^sin\($/);
+  });
 });

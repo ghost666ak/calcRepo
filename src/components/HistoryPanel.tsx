@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useHistory, type HistoryEntry } from '../state/history';
 import { useTranslation } from '../i18n/useTranslation';
 import { usePreferences } from '../state/preferences';
+import { visualiseExpression } from './ExpressionDisplay';
 
 interface Props {
   readonly open: boolean;
@@ -85,7 +86,7 @@ export function HistoryPanel({ open, onClose, onSelect }: Props): JSX.Element | 
           {visible.map((entry) => (
             <li key={entry.id} className="history-panel__entry">
               <div className="history-panel__expressions">
-                <code>{entry.expression}</code>
+                <code>{visualiseExpression(entry.expression)}</code>
                 <span aria-hidden="true">→</span>
                 <strong>{entry.result}</strong>
               </div>

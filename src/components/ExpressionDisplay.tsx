@@ -8,6 +8,28 @@ interface Props {
   readonly testId?: string;
 }
 
+const VISUAL_OPERATORS: Record<string, string> = {
+  '*': '×',
+  '/': '÷',
+  '-': '−',
+};
+
+/**
+ * Convert the canonical ASCII expression to its typographic form. Internal
+ * operators are stored canonically (`*`, `/`, `-`) but displayed with
+ * typographic counterparts (`×`, `÷`, `−`) so the displayed expression
+ * matches what the keypad shows. Used by the live display AND history
+ * lists so they all show the same characters.
+ */
+export function visualiseExpression(text: string): string {
+  let out = '';
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]!;
+    out += VISUAL_OPERATORS[ch] ?? ch;
+  }
+  return out;
+}
+
 /**
  * Render an expression as a sequence of spans so the character at the error
  * position (if any) can carry a visual treatment. Falls back to a placeholder
@@ -41,26 +63,11 @@ export function ExpressionDisplay({
           className={segment.error ? 'display__expression-error' : undefined}
           data-error={segment.error ? 'true' : undefined}
         >
-          {visualise(segment.text)}
+          {visualiseExpression(segment.text)}
         </span>
       ))}
     </span>
   );
-}
-
-const VISUAL_OPERATORS: Record<string, string> = {
-  '*': '×',
-  '/': '÷',
-  '-': '−',
-};
-
-function visualise(text: string): string {
-  let out = '';
-  for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i]!;
-    out += VISUAL_OPERATORS[ch] ?? ch;
-  }
-  return out;
 }
 
 interface Segment {

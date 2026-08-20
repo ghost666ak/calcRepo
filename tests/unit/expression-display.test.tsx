@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ExpressionDisplay } from '../../src/components/ExpressionDisplay';
+import { ExpressionDisplay, visualiseExpression } from '../../src/components/ExpressionDisplay';
 
 describe('ExpressionDisplay', () => {
   it('renders a placeholder when the expression is empty', () => {
@@ -82,5 +82,17 @@ describe('ExpressionDisplay', () => {
     );
     const errorSpan = screen.getByTestId('expr').querySelector('[data-error="true"]');
     expect(errorSpan?.textContent).toBe('×');
+  });
+});
+
+describe('visualiseExpression', () => {
+  it('converts * / - to × ÷ −', () => {
+    expect(visualiseExpression('100*50%-6/3')).toBe('100×50%−6÷3');
+  });
+  it('leaves digits and other operators unchanged', () => {
+    expect(visualiseExpression('2^3+1!')).toBe('2^3+1!');
+  });
+  it('handles the empty string', () => {
+    expect(visualiseExpression('')).toBe('');
   });
 });

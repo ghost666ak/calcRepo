@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { evaluateScientific } from '../../core/scientific/evaluate';
 import { autoCorrectParens } from '../../core/expression/autoCorrect';
 import type { AngleUnit } from '../../core/types';
 import { usePreferences } from '../../state/preferences';
+
+// Tokens that should "continue from the result" after an equals (so the
+// user can keep calculating from the answer). Excludes unary parens —
+// `(` after `=` starts a fresh sub-expression.
+const CONTINUING_OPERATORS = new Set(['+', '-', '*', '/', '^', '%']);
 
 export interface ScientificHistoryEntry {
   readonly expression: string;
@@ -47,12 +52,21 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   // leading underscore silences @typescript-eslint/no-unused-vars.
   const [, setLatestEntry] = useState<ScientificHistoryEntry | null>(null);
   const [memory, setMemory] = useState(0);
+  // Result of the most recent successful equals. Used by appendText to
+  // continue from the answer when the user types a binary operator.
+  const [lastResult, setLastResult] = useState<string | null>(null);
+  // True iff the last action was a successful (or auto-corrected) equals.
+  // While true, pressing a CONTINUING_OPERATORS token replaces the current
+  // expression with lastResult before appending.
+  const wasJustEvaluated = useRef(false);
 
   const clear = useCallback(() => {
     setExpression('');
     setDisplay('0');
     setError(null);
     setErrorPosition(null);
+    setLastResult(null);
+    wasJustEvaluated.current = false;
   }, []);
 
   const seedWith = useCallback((value: string) => {
@@ -60,11 +74,14 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setErrorPosition(null);
     setExpression(value);
     setDisplay(value.length === 0 ? '0' : value);
+    setLastResult(null);
+    wasJustEvaluated.current = false;
   }, []);
 
   const backspace = useCallback(() => {
     setError(null);
     setErrorPosition(null);
+    wasJustEvaluated.current = false;
     setExpression((current) => {
       const next = current.slice(0, -1);
       setDisplay(next.length === 0 ? '0' : next);
@@ -75,12 +92,26 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   const appendText = useCallback((value: string) => {
     setError(null);
     setErrorPosition(null);
+    // After a successful equals:
+    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from the
+    //     answer so the user can extend the calculation. e.g.
+    //     `100*50%` = `50` × → `50 *`, not `100*50% *`.
+    //   - Anything else (digits, parens, function tokens like `sin(`) starts
+    //     a fresh sub-expression, so the user isn't dragging along stale
+    //     tokens they didn't ask for. e.g. `2+3` = `5` sin → `sin(`, not
+    //     `2+3sin(`.
+    const fromResult =
+      wasJustEvaluated.current && lastResult !== null && CONTINUING_OPERATORS.has(value);
+    const shouldReset =
+      wasJustEvaluated.current && !CONTINUING_OPERATORS.has(value);
+    wasJustEvaluated.current = false;
     setExpression((current) => {
-      const next = current + value;
+      const base = fromResult ? lastResult! : shouldReset ? '' : current;
+      const next = base + value;
       setDisplay(next);
       return next;
     });
-  }, []);
+  }, [lastResult]);
 
   const equals = useCallback(() => {
     setExpression((current) => {
@@ -94,6 +125,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       const result = evaluateScientific(trimmed, options);
       if (result.ok) {
         setDisplay(result.formatted);
+        setLastResult(result.formatted);
+        wasJustEvaluated.current = true;
         setHistory((prev) => [{ expression: trimmed, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
         setLatestEntry({ expression: trimmed, result: result.formatted });
         // Keep the question visible; only the answer moves to the big display.
@@ -104,6 +137,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       });
       if (corrected) {
         setDisplay(corrected.formatted);
+        setLastResult(corrected.formatted);
+        wasJustEvaluated.current = true;
         setHistory((prev) =>
           [{ expression: corrected.correctedFrom, result: corrected.formatted }, ...prev].slice(0, MAX_HISTORY),
         );
@@ -116,6 +151,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       setError(result.message);
       setErrorPosition(result.position ?? null);
       setDisplay('Error');
+      wasJustEvaluated.current = false;
+      setLastResult(null);
       return trimmed;
     });
   }, [preferences.angleUnit, preferences.precisionDigits]);

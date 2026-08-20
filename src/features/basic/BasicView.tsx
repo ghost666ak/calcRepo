@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Key } from '../../components/Key';
-import { ExpressionDisplay } from '../../components/ExpressionDisplay';
+import { ExpressionDisplay, visualiseExpression } from '../../components/ExpressionDisplay';
 import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
@@ -144,7 +144,7 @@ export function BasicView({
           <ol>
             {history.map((entry, index) => (
               <li key={`${entry.expression}-${index}`}>
-                <code>{entry.expression}</code>
+                <code>{visualiseExpression(entry.expression)}</code>
                 <span> = </span>
                 <HistoryAnswer value={entry.result} />
                 {!autoSaveEnabled && onManualSave && (
