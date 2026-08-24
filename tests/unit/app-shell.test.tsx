@@ -6,7 +6,7 @@ describe('App shell', () => {
   it('renders the calculator with initial zero display', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: /calcRepo/i })).toBeInTheDocument();
-    expect(screen.getByTestId('display-value')).toHaveTextContent('0');
+    expect(screen.getByTestId('display-value')).toHaveValue('0');
   });
 
   it('exposes the configured calculator modes', () => {

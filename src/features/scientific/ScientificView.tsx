@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { listScientificFunctions } from '../../core/scientific/functions';
 import { ANGLE_UNITS } from '../../core/scientific/angle';
 import type { AngleUnit } from '../../core/types';
-import { ExpressionDisplay, visualiseExpression } from '../../components/ExpressionDisplay';
+import { ExpressionDisplay, canonicaliseExpression, visualiseExpression } from '../../components/ExpressionDisplay';
 import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useScientificCalculator } from './useScientificCalculator';
 import type { ScientificHistoryEntry } from './useScientificCalculator';
@@ -88,6 +88,8 @@ export function ScientificView({
     memoryRecall,
     memoryClear,
     seedWith,
+    setDisplayValue,
+    setInputFocused,
   } = useScientificCalculator();
   const { preferences } = usePreferences();
   const { t } = useTranslation();
@@ -152,9 +154,22 @@ export function ScientificView({
           errorUx={preferences.errorUx}
           testId="display-expression"
         />
-        <output className="display__value" data-testid="display-value" aria-live="polite">
-          {display}
-        </output>
+        <input
+          className="display__value display__value--editable"
+          data-testid="display-value"
+          type="text"
+          inputMode="text"
+          autoComplete="off"
+          spellCheck={false}
+          aria-live="polite"
+          value={visualiseExpression(display)}
+          onChange={(e) => {
+            const canonical = canonicaliseExpression(e.target.value);
+            setDisplayValue(canonical);
+          }}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
+        />
         {showErrorText && error && (
           <p className="display__error" role="alert" data-testid="display-error">
             {error}

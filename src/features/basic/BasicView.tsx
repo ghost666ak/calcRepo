@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Key } from '../../components/Key';
-import { ExpressionDisplay, visualiseExpression } from '../../components/ExpressionDisplay';
+import { ExpressionDisplay, canonicaliseExpression, visualiseExpression } from '../../components/ExpressionDisplay';
 import { HistoryAnswer } from '../../components/HistoryAnswer';
 import { useBasicCalculator } from './useBasicCalculator';
 import type { BasicHistoryEntry } from './useBasicCalculator';
@@ -47,7 +47,7 @@ export function BasicView({
   onManualSave,
   seedExpression,
 }: Props = {}): JSX.Element {
-  const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry, seedWith } = useBasicCalculator();
+  const { expression, display, error, errorPosition, history, press, copy, repeat, consumeLatestEntry, seedWith, setDisplayValue, setInputFocused } = useBasicCalculator();
   const { preferences } = usePreferences();
   const { t } = useTranslation();
   const showErrorText = preferences.errorUx === 'verbose';
@@ -87,13 +87,22 @@ export function BasicView({
           errorUx={preferences.errorUx}
           testId="display-expression"
         />
-        <output
-          className="display__value"
+        <input
+          className="display__value display__value--editable"
           data-testid="display-value"
+          type="text"
+          inputMode="text"
+          autoComplete="off"
+          spellCheck={false}
           aria-live="polite"
-        >
-          {display}
-        </output>
+          value={visualiseExpression(display)}
+          onChange={(e) => {
+            const canonical = canonicaliseExpression(e.target.value);
+            setDisplayValue(canonical);
+          }}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
+        />
         {showErrorText && error && (
           <p className="display__error" role="alert" data-testid="display-error">
             {error}

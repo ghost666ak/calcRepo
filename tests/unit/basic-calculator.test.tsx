@@ -17,7 +17,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '×' }));
     await user.click(screen.getByRole('button', { name: '4' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('14');
+    expect(screen.getByTestId("display-value")).toHaveValue('14');
   });
 
   it('reports a division-by-zero error and allows recovery', async () => {
@@ -29,7 +29,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByTestId('key-equals'));
     expect(screen.getByTestId('display-error')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'C' }));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('0');
+    expect(screen.getByTestId("display-value")).toHaveValue('0');
   });
 
   it('handles keyboard entry', async () => {
@@ -37,7 +37,7 @@ describe('BasicView interactions', () => {
     render(<BasicView />);
     await user.keyboard('(2+3)*4');
     await user.keyboard('{Enter}');
-    expect(screen.getByTestId('display-value')).toHaveTextContent('20');
+    expect(screen.getByTestId("display-value")).toHaveValue('20');
   });
 
   it('replaces the trailing operator instead of duplicating it', async () => {
@@ -56,12 +56,12 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     // The post-= digit resets; "5" should now be a fresh "5", not "2+35".
     await user.click(screen.getByRole('button', { name: '5' }));
     expect(screen.getByTestId('display-expression')).toHaveTextContent('5');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
   });
 
   it('starts a fresh calculation when a decimal is pressed after = (default)', async () => {
@@ -71,16 +71,19 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     await user.click(screen.getByRole('button', { name: '.' }));
     await user.click(screen.getByRole('button', { name: '5' }));
     expect(screen.getByTestId('display-expression')).toHaveTextContent('.5');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');
+    expect(screen.getByTestId("display-value")).toHaveValue('0.5');
   });
 
-  it('continues from the answer when × is pressed after =', async () => {
-    // Regression for: `100 × 50%` = `50` × → was `100 × 50 ×`, should be `50 ×`.
+  it('shows the full question on top and the continuation on bottom after = + binary', async () => {
+    // After `100 × 50% = 50` the small "question" line should keep showing
+    // the FULL question (with the new operator appended), while the big
+    // "answer" line should continue from the result. e.g.
+    //   `100 × 50%` = `50` × →  top `100×50%×`, bottom `50×`.
     const user = userEvent.setup();
     render(<BasicView />);
     await user.click(screen.getByRole('button', { name: '1' }));
@@ -91,10 +94,12 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '0' }));
     await user.click(screen.getByRole('button', { name: '%' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('50');
+    expect(screen.getByTestId('display-value')).toHaveValue('50');
     await user.click(screen.getByRole('button', { name: '×' }));
-    // Result is the basis for the new expression — not the original question.
-    expect(screen.getByTestId('display-expression')).toHaveTextContent('50×');
+    // Top: full canonical question including the new op.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('100×50%×');
+    // Bottom: continuation from the result.
+    expect(screen.getByTestId('display-value')).toHaveValue('50×');
   });
 
   it('continues from the answer when + is pressed after = regardless of clearAfterEquals', async () => {
@@ -110,9 +115,11 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '8' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('15');
+    expect(screen.getByTestId('display-value')).toHaveValue('15');
     await user.click(screen.getByRole('button', { name: '−' }));
-    expect(screen.getByTestId('display-expression')).toHaveTextContent('15−');
+    // Top: full question with new op; bottom: continuation.
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('7+8−');
+    expect(screen.getByTestId('display-value')).toHaveValue('15−');
   });
 
   it('starts fresh when ( is pressed after = (paren is not a continuing operator)', async () => {
@@ -122,7 +129,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     await user.click(screen.getByRole('button', { name: '(' }));
     // `(` is unary after `=` — should start a fresh sub-expression.
     expect(screen.getByTestId('display-expression')).toHaveTextContent('(');
@@ -140,12 +147,12 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     // Legacy behaviour: the next digit appends to the old expression.
     await user.click(screen.getByRole('button', { name: '5' }));
     expect(screen.getByTestId('display-expression')).toHaveTextContent('2+35');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('37');
+    expect(screen.getByTestId("display-value")).toHaveValue('37');
   });
 
   it('preserves the trailing operator when "(" is typed next', async () => {
@@ -156,7 +163,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '(' }));
     await user.keyboard('3+5)');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('-6');
+    expect(screen.getByTestId("display-value")).toHaveValue('−6');
   });
 
   it('repeats the last result by adding it to itself', async () => {
@@ -166,11 +173,11 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     await act(async () => {
       await user.click(screen.getByTestId('repeat-button'));
     });
-    expect(screen.getByTestId('display-value')).toHaveTextContent('10');
+    expect(screen.getByTestId("display-value")).toHaveValue('10');
   });
 
   it('auto-corrects a missing ")" and reports what it did', async () => {
@@ -178,7 +185,7 @@ describe('BasicView interactions', () => {
     render(<BasicView />);
     await user.keyboard('(2+3');
     await user.keyboard('{Enter}');
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     // The original (corrected) expression stays visible above the answer.
     expect(screen.getByTestId('display-expression')).toHaveTextContent('(2+3)');
     const error = screen.getByTestId('display-error');
@@ -193,7 +200,7 @@ describe('BasicView interactions', () => {
     await user.click(screen.getByRole('button', { name: '+' }));
     await user.click(screen.getByRole('button', { name: '3' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     // The expression above should still be the user's input.
     expect(screen.getByTestId('display-expression')).toHaveTextContent('2+3');
   });
@@ -265,7 +272,7 @@ describe('BasicView interactions', () => {
     await user.keyboard('5');
     await user.keyboard('!');
     await user.keyboard('{Enter}');
-    expect(screen.getByTestId('display-value')).toHaveTextContent('120');
+    expect(screen.getByTestId("display-value")).toHaveValue('120');
   });
 
   it('clears the inline error on the next valid press', async () => {
@@ -308,5 +315,91 @@ describe('BasicView interactions', () => {
     expect(code).toBeInTheDocument();
     // Defensive: no stray raw * in the entry text.
     expect(code.textContent).not.toContain('*');
+  });
+
+  it('keeps the full question visible on top and the continuation on bottom across digits', async () => {
+    // After `5+6=11` the small line should keep the full question as the
+    // user keeps typing, while the big line runs from the result. e.g.
+    //   `5 + 6 =` `+ 8` →  top `5+6+8`, bottom `11+8` →  `=` → bottom `19`.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '5' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '6' }));
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveValue('11');
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '8' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('5+6+8');
+    expect(screen.getByTestId('display-value')).toHaveValue('11+8');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveValue('19');
+  });
+
+  it('auto-wraps the previous question in brackets when the new op binds tighter', async () => {
+    // After `5+6=11`, pressing `*` would otherwise make the top line mean
+    // `5 + (6 * x)` while the bottom means `(5+6) * x`. Auto-bracket keeps
+    // them semantically equal. e.g.
+    //   `5 + 6 =` `* 2` →  top `(5+6)*2`, bottom `11*2` →  `=` → bottom `22`.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '5' }));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '6' }));
+    await user.click(screen.getByTestId('key-equals'));
+    await user.click(screen.getByRole('button', { name: '×' }));
+    await user.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('(5+6)×2');
+    expect(screen.getByTestId('display-value')).toHaveValue('11×2');
+    await user.click(screen.getByTestId('key-equals'));
+    expect(screen.getByTestId('display-value')).toHaveValue('22');
+  });
+
+  it('does not wrap when the new op has the same or lower precedence', async () => {
+    // `5*6=30`, then `+2`. Same or lower precedence → no bracket.
+    // top `5×6+2`, bottom `30+2`, result `32`.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    await user.click(screen.getByRole('button', { name: '5' }));
+    await user.click(screen.getByRole('button', { name: '×' }));
+    await user.click(screen.getByRole('button', { name: '6' }));
+    await user.click(screen.getByTestId('key-equals'));
+    await user.click(screen.getByRole('button', { name: '+' }));
+    await user.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('5×6+2');
+    expect(screen.getByTestId('display-value')).toHaveValue('30+2');
+  });
+
+  it('shows a movable cursor inside the editable result field', async () => {
+    // The big display is now an <input> — verify the element has the
+    // right shape and a cursor lands inside it on focus. jsdom does not
+    // render a real caret, but it does track selection ranges, so we
+    // assert the focused element + its value.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    const result = screen.getByTestId('display-value') as HTMLInputElement;
+    expect(result.tagName).toBe('INPUT');
+    expect(result.type).toBe('text');
+    await user.click(result);
+    expect(result).toHaveFocus();
+    expect(result.value).toBe('0');
+  });
+
+  it('treats typographic operators typed into the result field as their ASCII counterparts', async () => {
+    // On mobile the user can paste or type × ÷ − directly into the big
+    // result field. The hook canonicalises them back to ASCII so the
+    // evaluator still parses correctly.
+    const user = userEvent.setup();
+    render(<BasicView />);
+    const result = screen.getByTestId('display-value') as HTMLInputElement;
+    await user.click(result);
+    await user.keyboard('5');
+    await user.keyboard('×');
+    await user.keyboard('6');
+    // The visible value should be visualised (`5×6`); the underlying
+    // canonical form feeds the next `=` correctly.
+    expect(result.value).toBe('5×6');
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('display-value')).toHaveValue('30');
   });
 });

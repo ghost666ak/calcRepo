@@ -299,6 +299,30 @@
   max-width: 100%;
 }
 
+/* Editable variant of the big answer field. Looks like the read-only
+ * output but accepts input, shows a caret, and reacts to focus. */
+.display__value--editable {
+  display: block;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  margin: 0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  caret-color: var(--color-accent, currentColor);
+}
+.display__value--editable:focus {
+  border-color: var(--color-accent, currentColor);
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+.display__value--editable::selection {
+  background: color-mix(in srgb, var(--color-accent, currentColor) 30%, transparent);
+}
+
 .display__error {
   margin: 0;
   color: var(--color-error);

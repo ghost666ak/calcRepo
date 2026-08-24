@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { evaluate } from '../../core/expression';
 import { autoCorrectParens } from '../../core/expression/autoCorrect';
+import { needsContinuationBracket } from '../../core/expression/autoBracket';
 import { usePreferences } from '../../state/preferences';
 
 export interface BasicHistoryEntry {
@@ -23,6 +24,13 @@ export interface UseBasicCalculatorResult {
   readonly consumeLatestEntry: () => BasicHistoryEntry | null;
   /** Replace the current expression. Used by History → Reuse. */
   readonly seedWith: (value: string) => void;
+  /** Replace the big display value (the editable result field on mobile).
+   *  Re-evaluates the expression so the small line stays in sync. */
+  readonly setDisplayValue: (value: string) => void;
+  /** True while the editable result field is focused — used by the
+   *  window-keydown handler to avoid double-firing on mobile typing. */
+  readonly inputFocused: boolean;
+  readonly setInputFocused: (focused: boolean) => void;
 }
 
 const MAX_HISTORY = 20;
@@ -41,19 +49,34 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastExpression, setLastExpression] = useState<string | null>(null);
   const [latestEntry, setLatestEntry] = useState<BasicHistoryEntry | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
   const { preferences } = usePreferences();
   // Tracks whether the last action was a successful (or auto-corrected) equals.
   // When set, the next digit/decimal press resets the expression if the user
   // has opted into "Clear after equals". Operators intentionally ignore this
   // so pressing + after = still appends to the expression.
   const wasJustEvaluated = useRef(false);
+  // True while the user is mid-continuation: the small "question" line
+  // shows the full canonical question (including the part the user
+  // typed after `=`), while the big "answer" line continues running from
+  // the last `=` result. Subsequent digit/decimal/op presses append to
+  // both lines independently so they keep their distinct prefixes.
+  const inContinuation = useRef(false);
+  // Prefix of the big "answer" line while in continuation mode.
+  // Set when the first post-`=` binary op is pressed (e.g. `11+` after
+  // `5+6=11` then `+`); grows with every further input.
+  const [bottomPrefix, setBottomPrefix] = useState<string>('');
 
   const clear = useCallback(() => {
     setExpression('');
     setDisplay('0');
     setError(null);
     setErrorPosition(null);
+    setLastResult(null);
+    setLastExpression(null);
+    setBottomPrefix('');
     wasJustEvaluated.current = false;
+    inContinuation.current = false;
   }, []);
 
   const seedWith = useCallback((value: string) => {
@@ -61,11 +84,21 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     setErrorPosition(null);
     setExpression(value);
     setDisplay(value.length === 0 ? '0' : value);
+    setBottomPrefix('');
+    wasJustEvaluated.current = false;
+    inContinuation.current = false;
   }, []);
 
   const backspace = useCallback(() => {
     setError(null);
     setErrorPosition(null);
+    wasJustEvaluated.current = false;
+    if (inContinuation.current) {
+      setExpression((current) => current.slice(0, -1));
+      setBottomPrefix((current) => current.slice(0, -1));
+      setDisplay((current) => current.slice(0, -1));
+      return;
+    }
     setExpression((current) => {
       const next = current.slice(0, -1);
       setDisplay(next.length === 0 ? '0' : next);
@@ -78,6 +111,15 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     setErrorPosition(null);
     const shouldReset = wasJustEvaluated.current && preferences.clearAfterEquals;
     if (shouldReset) wasJustEvaluated.current = false;
+    if (inContinuation.current) {
+      // Mid-continuation: append the digit to both lines independently
+      // so the question and the running answer keep their distinct
+      // prefixes (e.g. top `5+6+8`, bottom `11+8`).
+      setExpression((current) => appendDigit(current, digit));
+      setBottomPrefix((current) => appendDigit(current, digit));
+      setDisplay((current) => appendDigit(current, digit));
+      return;
+    }
     setExpression((current) => {
       const base = shouldReset ? '' : current;
       const next = appendDigit(base, digit);
@@ -90,33 +132,108 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     setError(null);
     setErrorPosition(null);
     // After a successful equals:
-    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from the
-    //     result so the user can extend the calculation. e.g.
-    //     `100*50%` = `50` × → `50 *`, not `100*50% *`.
+    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from
+    //     the result. The small "question" line keeps the FULL canonical
+    //     question (with auto-bracket if BODMAS would change meaning); the
+    //     big "answer" line keeps running from `lastResult`. After that
+    //     first post-`=` press, both lines build in lock-step. e.g.
+    //       `5+6` = `11` + `8` →  top `5+6+8`, bottom `11+8` →
+    //                              press `=` → bottom `19`.
+    //       `5+6` = `11` * `2` →  top `(5+6)*2`, bottom `11*2` →
+    //                              press `=` → bottom `22`.
     //   - A unary operator (`(`, `!`) starts a fresh sub-expression, so the
     //     user isn't dragging along stale tokens they didn't ask for. e.g.
     //     `2+3` = `5` ( → `(`, not `5(`.
-    const fromResult =
-      wasJustEvaluated.current && lastResult !== null && BINARY_OPS.has(op);
-    const shouldReset = wasJustEvaluated.current && !BINARY_OPS.has(op);
+    const justEvaluated = wasJustEvaluated.current;
     wasJustEvaluated.current = false;
+    const isBinary = BINARY_OPS.has(op);
+    if (justEvaluated && isBinary && lastResult !== null) {
+      const prevForTop = lastExpression ?? expression;
+      const needsWrap = needsContinuationBracket(prevForTop, op);
+      const top = needsWrap ? `(${prevForTop})${op}` : `${prevForTop}${op}`;
+      const bottom = `${lastResult}${op}`;
+      setExpression(top);
+      setDisplay(bottom);
+      setBottomPrefix(bottom);
+      inContinuation.current = true;
+      return;
+    }
+    if (justEvaluated && !isBinary) {
+      setExpression(op);
+      setDisplay(op);
+      setBottomPrefix('');
+      inContinuation.current = false;
+      return;
+    }
+    if (inContinuation.current) {
+      // Mid-continuation: both lines already diverge; append the new op
+      // to each independently so they keep their distinct prefixes.
+      setExpression((current) => appendOperator(current, op));
+      setBottomPrefix((current) => appendOperator(current, op));
+      setDisplay((current) => appendOperator(current, op));
+      return;
+    }
     setExpression((current) => {
-      const base = fromResult
-        ? lastResult!
-        : shouldReset
-        ? ''
-        : current;
-      const next = appendOperator(base, op);
+      const next = appendOperator(current, op);
       setDisplay(next);
       return next;
     });
-  }, [lastResult]);
+  }, [lastResult, lastExpression, expression]);
+
+  /** Replace the big display value (editable result field on mobile).
+   *  Treats the value as the new canonical expression (so the small
+   *  "question" line stays in sync) and surfaces a parse error inline
+   *  if the typed value doesn't parse. The display itself just mirrors
+   *  what the user entered — pressing Enter evaluates via `equals()`.
+   *  This avoids the expression snapping to its result while the user
+   *  is still typing. */
+  const setDisplayValue = useCallback((value: string) => {
+    setError(null);
+    setErrorPosition(null);
+    inContinuation.current = false;
+    setBottomPrefix('');
+    wasJustEvaluated.current = false;
+    // The input's default value is `0`; typing `5` makes the field show
+    // `05` because the cursor lands *after* the zero. Strip the leading
+    // zero in that situation so the user sees what they actually typed.
+    const trimmed = stripLeadingZero(value);
+    setExpression(trimmed);
+    setDisplay(trimmed.length === 0 ? '0' : trimmed);
+    if (trimmed === '') return;
+    const result = evaluate(trimmed);
+    if (!result.ok && result.kind === 'syntax') {
+      setError(result.message);
+      setErrorPosition(result.position ?? null);
+    }
+  }, []);
 
   const pressDecimal = useCallback(() => {
     setError(null);
     setErrorPosition(null);
     const shouldReset = wasJustEvaluated.current && preferences.clearAfterEquals;
     if (shouldReset) wasJustEvaluated.current = false;
+    if (inContinuation.current) {
+      // Mid-continuation: try to append `.` to both prefixes; if either
+      // rejects (already has a decimal in its current number segment),
+      // surface the inline error so the user sees a typo instead of a
+      // silent drop.
+      const bottomResult = appendDecimal(bottomPrefix);
+      if (!bottomResult.ok) {
+        setError('Number already has a decimal point.');
+        setErrorPosition(bottomPrefix.length);
+        return;
+      }
+      const topResult = appendDecimal(expression);
+      if (!topResult.ok) {
+        setError('Number already has a decimal point.');
+        setErrorPosition(expression.length);
+        return;
+      }
+      setBottomPrefix(bottomResult.value);
+      setExpression(topResult.value);
+      setDisplay(bottomResult.value === '0' ? '0.' : bottomResult.value);
+      return;
+    }
     setExpression((current) => {
       const base = shouldReset ? '' : current;
       const result = appendDecimal(base);
@@ -132,7 +249,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
       setDisplay(result.value === '0' ? '0.' : result.value);
       return result.value;
     });
-  }, [preferences.clearAfterEquals]);
+  }, [preferences.clearAfterEquals, bottomPrefix, expression]);
 
   const equals = useCallback(() => {
     setExpression((current) => {
@@ -150,6 +267,8 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         // the user has opted in. The visible expression stays put so the
         // question remains on screen — only the answer moves to the big display.
         wasJustEvaluated.current = true;
+        inContinuation.current = false;
+        setBottomPrefix('');
         return current;
       }
       // Attempt a safe auto-correction (e.g. "(2+3" → "(2+3)").
@@ -171,12 +290,16 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         // Auto-correct counts as an evaluation — the next digit/decimal should
         // also reset if the preference is on.
         wasJustEvaluated.current = true;
+        inContinuation.current = false;
+        setBottomPrefix('');
         return corrected.correctedFrom;
       }
       setError(result.message);
       setErrorPosition(result.position ?? null);
       setDisplay('Error');
       wasJustEvaluated.current = false;
+      inContinuation.current = false;
+      setBottomPrefix('');
       return current;
     });
   }, []);
@@ -226,8 +349,20 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
       const { key } = event;
+      // Enter always evaluates, even when the editable result field is
+      // focused — otherwise the user can't evaluate their typed
+      // expression without first blurring the input.
+      if (key === 'Enter') {
+        equals();
+        event.preventDefault();
+        return;
+      }
+      // If the editable result field is focused (mobile typing), let the
+      // browser handle keystrokes normally — no double-input from the
+      // window-level keypad shortcut.
+      if (inputFocused) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (/^[0-9]$/.test(key)) {
         press(key);
         event.preventDefault();
@@ -252,7 +387,7 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
         // same factorial capability the scientific keypad has via the ! key.
         press('!');
         event.preventDefault();
-      } else if (key === 'Enter' || key === '=') {
+      } else if (key === '=') {
         equals();
         event.preventDefault();
       } else if (key === 'Backspace') {
@@ -271,17 +406,32 @@ export function useBasicCalculator(): UseBasicCalculatorResult {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [press, equals, backspace, clear]);
+  }, [press, equals, backspace, clear, inputFocused]);
 
   return useMemo(
-    () => ({ expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith }),
-    [expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith],
+    () => ({ expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith, setDisplayValue, inputFocused, setInputFocused }),
+    [expression, display, error, errorPosition, history, press, clear, backspace, equals, repeat, copy, consumeLatestEntry, seedWith, setDisplayValue, inputFocused],
   );
 }
 
 function appendDigit(current: string, digit: string): string {
   if (current === '0') return digit;
   return current + digit;
+}
+
+/** Drop the leading `0` from a value typed into the editable result
+ *  field when the next character is a digit or a binary operator that
+ *  should sit at the start of a new number/term (e.g. user types `5`
+ *  into a field showing `0` — the field briefly shows `05`, we should
+ *  canonicalise that to `5`). Preserves `0`, `0.`, `0.x`, and leading
+ *  zeros after a decimal point. */
+function stripLeadingZero(value: string): string {
+  if (value.length <= 1) return value;
+  if (value[0] !== '0') return value;
+  const next = value[1]!;
+  if (next === '.') return value;
+  if (/[0-9]/.test(next)) return value.slice(1);
+  return value;
 }
 
 /** Result of trying to append a decimal point. `ok: false` means the current

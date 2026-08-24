@@ -14,7 +14,7 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('radio', { name: /Degrees/i }));
     await user.keyboard('sin(30)');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');
+    expect(screen.getByTestId("display-value")).toHaveValue('0.5');
   });
 
   it('reports domain errors when invalid', async () => {
@@ -44,7 +44,7 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('button', { name: 'sin' }));
     await user.keyboard('30)');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('0.5');
+    expect(screen.getByTestId("display-value")).toHaveValue('0.5');
   });
 
   it('appends pi and e constants from their dedicated buttons', async () => {
@@ -54,7 +54,7 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('button', { name: '×' }));
     await user.click(screen.getByRole('button', { name: '2' }));
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('6.28');
+    expect(screen.getByTestId('display-value')).toHaveValue('6.28318530718');
   });
 
   it('evaluates 8! as 40320', async () => {
@@ -64,7 +64,7 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('button', { name: '!' }));
     await user.click(screen.getByTestId('key-equals'));
     // Trailing zeros are trimmed so the result reads as an integer.
-    expect(screen.getByTestId('display-value')).toHaveTextContent('40320');
+    expect(screen.getByTestId("display-value")).toHaveValue('40320');
   });
 
   it('supports nCr via function button', async () => {
@@ -73,7 +73,7 @@ describe('ScientificView interactions', () => {
     await user.click(screen.getByRole('button', { name: 'nCr' }));
     await user.keyboard('5,2)');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('10');
+    expect(screen.getByTestId("display-value")).toHaveValue('10');
   });
 
   // Sweep every scientific function button through the UI to make sure
@@ -110,20 +110,32 @@ describe('ScientificView interactions', () => {
         await user.click(screen.getByRole('button', { name: c.name }));
         await user.keyboard(c.type);
         await user.click(screen.getByTestId('key-equals'));
-        expect(screen.getByTestId('display-value')).toHaveTextContent(c.expectMatch);
+        const value = (screen.getByTestId('display-value') as HTMLInputElement).value;
+        // accept string or regex matchers, since precision-formatted
+        // results like e^1 may render as 2.71828182846 — the test wants
+        // a "looks like 2.7" check, not an exact-match one.
+        if (typeof c.expectMatch === 'string') {
+          expect(value).toBe(c.expectMatch);
+        } else {
+          expect(value).toMatch(c.expectMatch);
+        }
       });
     }
   });
 
   it('continues from the answer when × is pressed after =', async () => {
-    // Regression: `100 × 50%` = `50` × → was `100 × 50 ×`, should be `50 ×`.
+    // After `100 × 50% = 50`, the small question line keeps the FULL
+    // canonical question (with the new operator appended); the big
+    // answer line continues from the result. e.g.
+    //   `100 × 50%` = `50` × →  top `100×50%×`, bottom `50×`.
     const user = userEvent.setup();
     render(<ScientificView />);
     await user.keyboard('100*50%');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('50');
+    expect(screen.getByTestId('display-value')).toHaveValue('50');
     await user.click(screen.getByRole('button', { name: '×' }));
-    expect(screen.getByTestId('display-expression')).toHaveTextContent('50×');
+    expect(screen.getByTestId('display-expression')).toHaveTextContent('100×50%×');
+    expect(screen.getByTestId('display-value')).toHaveValue('50×');
   });
 
   it('starts fresh when a function is pressed after = (not a continuing operator)', async () => {
@@ -131,7 +143,7 @@ describe('ScientificView interactions', () => {
     render(<ScientificView />);
     await user.keyboard('2+3');
     await user.click(screen.getByTestId('key-equals'));
-    expect(screen.getByTestId('display-value')).toHaveTextContent('5');
+    expect(screen.getByTestId("display-value")).toHaveValue('5');
     await user.click(screen.getByRole('button', { name: 'sin' }));
     // sin( is not a continuing operator — should start a fresh sub-expression.
     expect(screen.getByTestId('display-expression')).toHaveTextContent(/^sin\($/);

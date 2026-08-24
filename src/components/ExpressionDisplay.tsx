@@ -31,6 +31,28 @@ export function visualiseExpression(text: string): string {
 }
 
 /**
+ * Reverse of `visualiseExpression`: map typographic operator glyphs back to
+ * the canonical ASCII the evaluator expects. Used when the user types
+ * directly into the editable result field (`× → *`, `÷ → /`, `− → -`).
+ * Anything the visualiser doesn't recognise is left as-is.
+ */
+export function canonicaliseExpression(text: string): string {
+  let out = '';
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]!;
+    let mapped: string | undefined;
+    for (const [ascii, glyph] of Object.entries(VISUAL_OPERATORS)) {
+      if (glyph === ch) {
+        mapped = ascii;
+        break;
+      }
+    }
+    out += mapped ?? ch;
+  }
+  return out;
+}
+
+/**
  * Render an expression as a sequence of spans so the character at the error
  * position (if any) can carry a visual treatment. Falls back to a placeholder
  * when there is no expression.

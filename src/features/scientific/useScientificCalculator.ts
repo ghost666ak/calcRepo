@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { evaluateScientific } from '../../core/scientific/evaluate';
 import { autoCorrectParens } from '../../core/expression/autoCorrect';
+import { needsContinuationBracket } from '../../core/expression/autoBracket';
 import type { AngleUnit } from '../../core/types';
 import { usePreferences } from '../../state/preferences';
 
@@ -36,6 +37,12 @@ export interface UseScientificCalculatorResult {
   readonly memoryClear: () => void;
   /** Replace the current expression. Used by History → Reuse. */
   readonly seedWith: (value: string) => void;
+  /** Replace the big display value (the editable result field on mobile).
+   *  Re-evaluates the expression so the small line stays in sync. */
+  readonly setDisplayValue: (value: string) => void;
+  /** True while the editable result field is focused. */
+  readonly inputFocused: boolean;
+  readonly setInputFocused: (focused: boolean) => void;
 }
 
 const MAX_HISTORY = 20;
@@ -52,9 +59,19 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
   // leading underscore silences @typescript-eslint/no-unused-vars.
   const [, setLatestEntry] = useState<ScientificHistoryEntry | null>(null);
   const [memory, setMemory] = useState(0);
+  const [inputFocused, setInputFocused] = useState(false);
   // Result of the most recent successful equals. Used by appendText to
   // continue from the answer when the user types a binary operator.
   const [lastResult, setLastResult] = useState<string | null>(null);
+  // The expression that produced `lastResult` — used to rebuild the
+  // full canonical question line after `=` + binary op.
+  const [lastExpression, setLastExpression] = useState<string | null>(null);
+  // True while the user is mid-continuation (post-`=` + first binary op):
+  // the small question line keeps the full canonical question while the
+  // big answer line continues from the last result. Subsequent
+  // digit/decimal/op presses append to both lines independently so they
+  // keep their distinct prefixes.
+  const inContinuation = useRef(false);
   // True iff the last action was a successful (or auto-corrected) equals.
   // While true, pressing a CONTINUING_OPERATORS token replaces the current
   // expression with lastResult before appending.
@@ -66,7 +83,9 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setError(null);
     setErrorPosition(null);
     setLastResult(null);
+    setLastExpression(null);
     wasJustEvaluated.current = false;
+    inContinuation.current = false;
   }, []);
 
   const seedWith = useCallback((value: string) => {
@@ -75,13 +94,20 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setExpression(value);
     setDisplay(value.length === 0 ? '0' : value);
     setLastResult(null);
+    setLastExpression(null);
     wasJustEvaluated.current = false;
+    inContinuation.current = false;
   }, []);
 
   const backspace = useCallback(() => {
     setError(null);
     setErrorPosition(null);
     wasJustEvaluated.current = false;
+    if (inContinuation.current) {
+      setExpression((current) => current.slice(0, -1));
+      setDisplay((current) => current.slice(0, -1));
+      return;
+    }
     setExpression((current) => {
       const next = current.slice(0, -1);
       setDisplay(next.length === 0 ? '0' : next);
@@ -93,25 +119,70 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     setError(null);
     setErrorPosition(null);
     // After a successful equals:
-    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from the
-    //     answer so the user can extend the calculation. e.g.
-    //     `100*50%` = `50` × → `50 *`, not `100*50% *`.
-    //   - Anything else (digits, parens, function tokens like `sin(`) starts
-    //     a fresh sub-expression, so the user isn't dragging along stale
-    //     tokens they didn't ask for. e.g. `2+3` = `5` sin → `sin(`, not
-    //     `2+3sin(`.
-    const fromResult =
-      wasJustEvaluated.current && lastResult !== null && CONTINUING_OPERATORS.has(value);
-    const shouldReset =
-      wasJustEvaluated.current && !CONTINUING_OPERATORS.has(value);
+    //   - A binary operator (`+`, `-`, `*`, `/`, `^`, `%`) continues from
+    //     the result. The small "question" line keeps the FULL canonical
+    //     question (with auto-bracket if BODMAS would change meaning); the
+    //     big "answer" line keeps running from `lastResult`. After that
+    //     first post-`=` press, both lines build in lock-step.
+    //   - Anything else (digits, parens, function tokens like `sin(`)
+    //     starts a fresh sub-expression.
+    const justEvaluated = wasJustEvaluated.current;
     wasJustEvaluated.current = false;
+    const isBinary = CONTINUING_OPERATORS.has(value);
+    if (justEvaluated && isBinary && lastResult !== null) {
+      const prevForTop = lastExpression ?? expression;
+      const needsWrap = needsContinuationBracket(prevForTop, value);
+      const top = needsWrap ? `(${prevForTop})${value}` : `${prevForTop}${value}`;
+      const bottom = `${lastResult}${value}`;
+      setExpression(top);
+      setDisplay(bottom);
+      inContinuation.current = true;
+      return;
+    }
+    if (justEvaluated && !isBinary) {
+      setExpression(value);
+      setDisplay(value);
+      inContinuation.current = false;
+      return;
+    }
+    if (inContinuation.current) {
+      // Mid-continuation: append the new token to both lines so they
+      // keep their distinct prefixes (top: full question, bottom: result
+      // continuation).
+      setExpression((current) => current + value);
+      setDisplay((current) => current + value);
+      return;
+    }
     setExpression((current) => {
-      const base = fromResult ? lastResult! : shouldReset ? '' : current;
-      const next = base + value;
+      const next = current + value;
       setDisplay(next);
       return next;
     });
-  }, [lastResult]);
+  }, [lastResult, lastExpression, expression]);
+
+  /** Replace the big display value (editable result field on mobile).
+   *  Stores the canonical value without auto-evaluating (the user might
+   *  still be typing); pressing Enter triggers `equals()`. Surfaces a
+   *  parse error inline if the typed value is invalid. */
+  const setDisplayValue = useCallback((value: string) => {
+    setError(null);
+    setErrorPosition(null);
+    inContinuation.current = false;
+    wasJustEvaluated.current = false;
+    setExpression(value);
+    setDisplay(value.length === 0 ? '0' : value);
+    if (value === '') return;
+    const result = evaluateScientific(value, {
+      maxLength: 4096,
+      maxDepth: 256,
+      angleUnit: preferences.angleUnit,
+      precisionDigits: preferences.precisionDigits,
+    });
+    if (!result.ok && result.kind === 'syntax') {
+      setError(result.message);
+      setErrorPosition(result.position ?? null);
+    }
+  }, [preferences.angleUnit, preferences.precisionDigits]);
 
   const equals = useCallback(() => {
     setExpression((current) => {
@@ -125,8 +196,10 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       const result = evaluateScientific(trimmed, options);
       if (result.ok) {
         setDisplay(result.formatted);
+        setLastExpression(trimmed);
         setLastResult(result.formatted);
         wasJustEvaluated.current = true;
+        inContinuation.current = false;
         setHistory((prev) => [{ expression: trimmed, result: result.formatted }, ...prev].slice(0, MAX_HISTORY));
         setLatestEntry({ expression: trimmed, result: result.formatted });
         // Keep the question visible; only the answer moves to the big display.
@@ -137,8 +210,10 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       });
       if (corrected) {
         setDisplay(corrected.formatted);
+        setLastExpression(corrected.correctedFrom);
         setLastResult(corrected.formatted);
         wasJustEvaluated.current = true;
+        inContinuation.current = false;
         setHistory((prev) =>
           [{ expression: corrected.correctedFrom, result: corrected.formatted }, ...prev].slice(0, MAX_HISTORY),
         );
@@ -152,7 +227,9 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       setErrorPosition(result.position ?? null);
       setDisplay('Error');
       wasJustEvaluated.current = false;
+      inContinuation.current = false;
       setLastResult(null);
+      setLastExpression(null);
       return trimmed;
     });
   }, [preferences.angleUnit, preferences.precisionDigits]);
@@ -219,15 +296,24 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
       const { key } = event;
+      // Enter always evaluates, even when the editable result field is
+      // focused — otherwise the user can't evaluate their typed
+      // expression without first blurring the input.
+      if (key === 'Enter') {
+        equals();
+        event.preventDefault();
+        return;
+      }
+      if (inputFocused) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (/^[0-9.+\-*/^()%!,]$/.test(key)) {
         press(key);
         event.preventDefault();
       } else if (/^[a-zA-Z]$/.test(key)) {
         press(key);
         event.preventDefault();
-      } else if (key === 'Enter' || key === '=') {
+      } else if (key === '=') {
         equals();
         event.preventDefault();
       } else if (key === 'Backspace') {
@@ -240,7 +326,7 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [press, equals, backspace, clear]);
+  }, [press, equals, backspace, clear, inputFocused]);
 
   return useMemo(
     () => ({
@@ -264,6 +350,9 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       memoryRecall,
       memoryClear,
       seedWith,
+      setDisplayValue,
+      inputFocused,
+      setInputFocused,
     }),
     [
       expression,
@@ -286,6 +375,8 @@ export function useScientificCalculator(): UseScientificCalculatorResult {
       memoryRecall,
       memoryClear,
       seedWith,
+      setDisplayValue,
+      inputFocused,
     ],
   );
 }
